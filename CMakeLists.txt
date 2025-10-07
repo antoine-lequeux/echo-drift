@@ -14,5 +14,11 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(echo-drift 
     main.cpp
+    src/SpaceShip.hpp
+    src/SpaceShip.cpp
+    src/Input.hpp
+    src/Input.cpp
+    src/Application.hpp
+    src/Application.cpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)
