@@ -1,6 +1,6 @@
 #include "Application.hpp"
 
-Application::Application() : window(sf::VideoMode({800, 600}), "Echo Drift") { window.setFramerateLimit(60); }
+Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift") { window.setFramerateLimit(60); }
 
 void Application::run()
 {
