@@ -25,6 +25,27 @@ public:
     void setPosition(sf::Vector2f position) { sprite.setPosition(position); }
     sf::Vector2f getPosition() const { return sprite.getPosition(); }
 
+    // Convert a local point to world space.
+    sf::Vector2f getLocalPoint(sf::Vector2f localPoint) const
+    {
+        // Adjust for scaling.
+        sf::Vector2f scale = sprite.getScale();
+        localPoint.x /= scale.x;
+        localPoint.y /= scale.y;
+
+        // Calculate the sprite's half size.
+        sf::Vector2f halfSize = {sprite.getLocalBounds().size.x * 0.5f, sprite.getLocalBounds().size.y * 0.5f};
+
+        // Center the local point relative to sprite's origin.
+        localPoint = {localPoint.x + halfSize.x, localPoint.y + halfSize.y};
+
+        // Get the sprite's transformation.
+        sf::Transform transform = sprite.getTransform();
+
+        // Transform the local point to world space.
+        return transform.transformPoint(localPoint);
+    }
+
     void move(sf::Vector2f offset) { sprite.move(offset); }
 
     void setSpeed(sf::Vector2f newSpeed) { speed = newSpeed; }
@@ -32,9 +53,9 @@ public:
 
     void setRotation(float angle)
     {
-        // Store true rotation for physics/gameplay
+        // Store true rotation for physics/gameplay.
         trueRotation = angle;
-        // Display quantized rotation
+        // Display quantized rotation.
         sprite.setRotation(sf::degrees(quantizeRotation(angle)));
     }
 
@@ -76,7 +97,7 @@ private:
     bool isDead = false;
 
     // Rotation handling.
-    float trueRotation = 0.f;  // Actual rotation used for gameplay
+    float trueRotation = 0.f; // Actual rotation used for gameplay
     float rotationStep = 6.f; // Rotation quantization step (in degrees)
 
     // Quantize a rotation angle to the nearest step.

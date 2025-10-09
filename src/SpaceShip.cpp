@@ -67,8 +67,9 @@ void SpaceShip::updateBehavior(float dt, Input& input, EntityManager& entityMana
 
 void SpaceShip::shootProjectile(EntityManager& entityManager)
 {
+    sf::Vector2f shipFront = getLocalPoint({0.f, -getSize().y / 2.f});
+
     // Add a new projectile entity.
-    entityManager.addEntity(
-        std::make_unique<Projectile>("assets/laser/12.png", getPosition() - sf::Vector2f{0.f, getSize().y / 2.f},
-                                     getSpeed() * 0.5f + sf::Vector2f{0.f, -600.f}, getRotation() - 90.f));
+    entityManager.addEntity(std::make_unique<Projectile>(
+        "assets/laser/12.png", shipFront, getSpeed() * 0.7f + sf::Vector2f{0.f, -600.f}, getRotation() - 90.f));
 }

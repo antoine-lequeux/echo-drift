@@ -3,7 +3,7 @@
 Entity::Entity(std::string texturePath) : texture(texturePath), sprite(texture)
 {
     // Center the origin for easier transformations.
-    sprite.setOrigin({sprite.getLocalBounds().size.x / 2, sprite.getLocalBounds().size.y / 2});
+    sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
 }
 
 void Entity::update(float dt, Input& input, EntityManager& entityManager)
