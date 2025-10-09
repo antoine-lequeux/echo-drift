@@ -71,5 +71,5 @@ void SpaceShip::shootProjectile(GameObjectManager& entityManager)
 
     // Add a new projectile entity.
     entityManager.addEntity(std::make_unique<Projectile>(
-        "assets/laser/12.png", shipFront, getSpeed() * 0.7f + sf::Vector2f{0.f, -800.f}, getRotation() - 90.f));
+        "assets/laser/12.png", shipFront, getSpeed() * 0.7f + sf::Vector2f{0.f, -800.f}, getRotation() - 90.f, 0.2f));
 }

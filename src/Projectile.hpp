@@ -6,14 +6,14 @@ class Projectile : public GameObject
 {
 public:
 
-    Projectile(std::string texturePath, sf::Vector2f position, sf::Vector2f speed, float rotation);
+    Projectile(std::string texturePath, sf::Vector2f position, sf::Vector2f speed, float rotation, float scale);
 
 private:
 
     void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) override;
 
     // Max distance before disappearing.
-    float maxDistance = 800.f;
+    float maxDistance = 1000.f;
 
     sf::Vector2f startPosition;
 };

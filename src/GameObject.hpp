@@ -12,6 +12,10 @@ class GameObject
 {
 public:
 
+    // Create a GameObject with no texture.
+    GameObject();
+
+    // Create a GameObject with a texture.
     GameObject(std::string texturePath);
 
     // Update the entity's state based on elapsed time and input.

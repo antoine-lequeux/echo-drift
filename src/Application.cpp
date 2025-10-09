@@ -16,7 +16,11 @@ void Application::run()
     }
 }
 
-void Application::setup() { entityManager.addEntity(std::make_unique<SpaceShip>("assets/ship.png")); }
+void Application::setup()
+{
+    entityManager.addEntity(std::make_unique<SpaceShip>("assets/ship.png"));
+    entityManager.addEntity(std::make_unique<GameManager>());
+}
 
 void Application::processEvents()
 {

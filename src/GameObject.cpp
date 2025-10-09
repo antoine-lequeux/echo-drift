@@ -1,6 +1,9 @@
 #include "GameObject.hpp"
 #include <algorithm>
 #include <ranges>
+#include <iostream>
+
+GameObject::GameObject() : texture(), sprite(texture) {}
 
 GameObject::GameObject(std::string texturePath) : texture(texturePath), sprite(texture)
 {
@@ -85,7 +88,9 @@ void GameObjectManager::update(float dt, Input& input)
         entity->update(dt, input, *this);
     }
 
-    // Remove marked entities
+    std::cout << "Entity count: " << entities.size() << "\n";
+
+    // Remove marked entities.
     std::erase_if(entities, [](const std::unique_ptr<GameObject>& e) { return e->isMarkedForDeletion(); });
 
     // Add pending entities.
