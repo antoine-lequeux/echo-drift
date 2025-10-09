@@ -1,5 +1,6 @@
 #pragma once
 #include "Input.hpp"
+#include <cmath>
 
 class EntityManager;
 class Entity;
@@ -29,8 +30,19 @@ public:
     void setSpeed(sf::Vector2f newSpeed) { speed = newSpeed; }
     sf::Vector2f getSpeed() const { return speed; }
 
-    void setRotation(float angle) { sprite.setRotation(sf::degrees(angle)); }
-    float getRotation() const { return sprite.getRotation().asDegrees(); }
+    void setRotation(float angle)
+    {
+        // Store true rotation for physics/gameplay
+        trueRotation = angle;
+        // Display quantized rotation
+        sprite.setRotation(sf::degrees(quantizeRotation(angle)));
+    }
+
+    float getRotation() const { return trueRotation; }
+    float getDisplayRotation() const { return sprite.getRotation().asDegrees(); }
+
+    void setRotationQuantization(float step) { rotationStep = step; }
+    float getRotationQuantization() const { return rotationStep; }
 
     void setScale(sf::Vector2f factors) { sprite.setScale(factors); }
     sf::Vector2f getScale() const { return sprite.getScale(); }
@@ -62,6 +74,13 @@ private:
 
     // Flag to mark the entity for deletion.
     bool isDead = false;
+
+    // Rotation handling.
+    float trueRotation = 0.f;  // Actual rotation used for gameplay
+    float rotationStep = 6.f; // Rotation quantization step (in degrees)
+
+    // Quantize a rotation angle to the nearest step.
+    float quantizeRotation(float angle) const { return std::round(angle / rotationStep) * rotationStep; }
 };
 
 // Manager class to handle all entities in the game.

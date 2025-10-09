@@ -18,4 +18,12 @@ private:
 
     // Movement speed in pixels per second.
     float moveSpeed = 400.f;
+
+    // Maximum rotation speed in degrees per second.
+    float rotationSpeed = 120.f;
+
+    // Maximum tilt angle when moving sideways.
+    float maxTiltAngle = 25.f;
+
+    float targetAngle = 0.f;
 };
