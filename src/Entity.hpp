@@ -22,56 +22,29 @@ public:
 
     // Setters and getters for position, speed, rotation, and scale:
     // =========
-    void setPosition(sf::Vector2f position) { sprite.setPosition(position); }
-    sf::Vector2f getPosition() const { return sprite.getPosition(); }
+    void setPosition(sf::Vector2f position);
+    sf::Vector2f getPosition() const;
 
     // Convert a local point to world space.
-    sf::Vector2f getLocalPoint(sf::Vector2f localPoint) const
-    {
-        // Adjust for scaling.
-        sf::Vector2f scale = sprite.getScale();
-        localPoint.x /= scale.x;
-        localPoint.y /= scale.y;
+    sf::Vector2f getLocalPoint(sf::Vector2f localPoint) const;
 
-        // Calculate the sprite's half size.
-        sf::Vector2f halfSize = {sprite.getLocalBounds().size.x * 0.5f, sprite.getLocalBounds().size.y * 0.5f};
+    void move(sf::Vector2f offset);
 
-        // Center the local point relative to sprite's origin.
-        localPoint = {localPoint.x + halfSize.x, localPoint.y + halfSize.y};
+    void setSpeed(sf::Vector2f newSpeed);
+    sf::Vector2f getSpeed() const;
 
-        // Get the sprite's transformation.
-        sf::Transform transform = sprite.getTransform();
+    void setRotation(float angle);
 
-        // Transform the local point to world space.
-        return transform.transformPoint(localPoint);
-    }
+    float getRotation() const;
+    float getDisplayRotation() const;
 
-    void move(sf::Vector2f offset) { sprite.move(offset); }
+    void setRotationQuantization(float step);
+    float getRotationQuantization() const;
 
-    void setSpeed(sf::Vector2f newSpeed) { speed = newSpeed; }
-    sf::Vector2f getSpeed() const { return speed; }
+    void setScale(sf::Vector2f factors);
+    sf::Vector2f getScale() const;
 
-    void setRotation(float angle)
-    {
-        // Store true rotation for physics/gameplay.
-        trueRotation = angle;
-        // Display quantized rotation.
-        sprite.setRotation(sf::degrees(quantizeRotation(angle)));
-    }
-
-    float getRotation() const { return trueRotation; }
-    float getDisplayRotation() const { return sprite.getRotation().asDegrees(); }
-
-    void setRotationQuantization(float step) { rotationStep = step; }
-    float getRotationQuantization() const { return rotationStep; }
-
-    void setScale(sf::Vector2f factors) { sprite.setScale(factors); }
-    sf::Vector2f getScale() const { return sprite.getScale(); }
-
-    sf::Vector2f getSize() const
-    {
-        return {sprite.getLocalBounds().size.x * getScale().x, sprite.getLocalBounds().size.y * getScale().y};
-    }
+    sf::Vector2f getSize() const;
     // =========
 
     // Setter and getter for the deletion flag.
@@ -110,10 +83,10 @@ class EntityManager
 public:
 
     // Add a new entity to the manager.
-    void addEntity(std::unique_ptr<Entity> entity) { pendingEntities.push_back(std::move(entity)); }
+    void addEntity(std::unique_ptr<Entity> entity);
 
     // Provide read-only access to entities for game objects
-    const Entities& getEntities() const { return entities; }
+    const Entities& getEntities() const;
 
 private:
 
@@ -121,34 +94,10 @@ private:
     friend class Application;
 
     // Update all entities and handle addition/removal.
-    void update(float dt, Input& input)
-    {
-        // Update entities.
-        for (auto& entity : entities)
-        {
-            entity->update(dt, input, *this);
-        }
-
-        // Remove marked entities
-        entities.erase(std::remove_if(entities.begin(), entities.end(), [](const std::unique_ptr<Entity>& entity)
-                                      { return entity->isMarkedForDeletion(); }),
-                       entities.end());
-
-        // Add pending entities.
-        entities.insert(entities.end(), std::make_move_iterator(pendingEntities.begin()),
-                        std::make_move_iterator(pendingEntities.end()));
-
-        pendingEntities.clear();
-    }
+    void update(float dt, Input& input);
 
     // Render all entities.
-    void render(sf::RenderWindow& window)
-    {
-        for (const auto& entity : entities)
-        {
-            entity->render(window);
-        }
-    }
+    void render(sf::RenderWindow& window);
 
     // Entities to be added after the current update cycle.
     Entities pendingEntities;
