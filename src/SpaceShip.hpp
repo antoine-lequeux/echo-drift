@@ -1,23 +1,18 @@
 #pragma once
-#include "Input.hpp"
+#include "Entity.hpp"
 
 // Class representing the player's spaceship.
-class SpaceShip
+class SpaceShip : public Entity
 {
 public:
 
-    SpaceShip(std::string texturePath, float s);
+    SpaceShip(std::string texturePath);
 
     // Update the spaceship's state based on input and elapsed time.
-    void update(float dt, Input& input);
-
-    // Render the spaceship to the given window.
-    void render(sf::RenderWindow& window);
+    void updateBehavior(float dt, Input& input) override;
 
 private:
 
-    float speed;
-
-    sf::Texture texture;
-    sf::Sprite sprite;
+    // Movement speed in pixels per second
+    float moveSpeed = 300.f;
 };

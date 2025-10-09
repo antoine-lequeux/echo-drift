@@ -13,6 +13,9 @@ public:
 
 private:
 
+    // Initial setup of the game.
+    void setup();
+
     // Handle key pressed events.
     void processEvents();
 
@@ -23,6 +26,7 @@ private:
     void render();
 
     sf::RenderWindow window;
-    SpaceShip player;
     Input input;
+
+    std::vector<std::unique_ptr<Entity>> entities;
 };
