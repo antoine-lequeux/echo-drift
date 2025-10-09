@@ -22,5 +22,7 @@ add_executable(echo-drift
     src/Application.cpp
     src/Entity.hpp
     src/Entity.cpp
+    src/Projectile.hpp
+    src/Projectile.cpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)

@@ -28,5 +28,5 @@ private:
     sf::RenderWindow window;
     Input input;
 
-    std::vector<std::unique_ptr<Entity>> entities;
+    EntityManager entityManager;
 };

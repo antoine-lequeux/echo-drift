@@ -16,7 +16,7 @@ void Application::run()
     }
 }
 
-void Application::setup() { entities.push_back(std::make_unique<SpaceShip>("assets/ship.png")); }
+void Application::setup() { entityManager.addEntity(std::make_unique<SpaceShip>("assets/ship.png")); }
 
 void Application::processEvents()
 {
@@ -28,22 +28,11 @@ void Application::processEvents()
     }
 }
 
-void Application::update(float dt)
-{
-    for (auto& entity : entities)
-    {
-        entity->update(dt, input);
-    }
-}
+void Application::update(float dt) { entityManager.update(dt, input); }
 
 void Application::render()
 {
     window.clear(sf::Color::Black);
-
-    for (auto& entity : entities)
-    {
-        entity->render(window);
-    }
-
+    entityManager.render(window);
     window.display();
 }
