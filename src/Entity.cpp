@@ -1,4 +1,6 @@
 #include "Entity.hpp"
+#include <algorithm>
+#include <ranges>
 
 Entity::Entity(std::string texturePath) : texture(texturePath), sprite(texture)
 {
@@ -71,15 +73,9 @@ sf::Vector2f Entity::getSize() const
 
 void Entity::updatePhysics(float dt) { move(speed * dt); }
 
-void EntityManager::addEntity(std::unique_ptr<Entity> entity)
-{
-    pendingEntities.push_back(std::move(entity));
-}
+void EntityManager::addEntity(std::unique_ptr<Entity> entity) { pendingEntities.push_back(std::move(entity)); }
 
-const Entities & EntityManager::getEntities() const
-{
-    return entities;
-}
+const Entities& EntityManager::getEntities() const { return entities; }
 
 void EntityManager::update(float dt, Input& input)
 {
@@ -90,13 +86,10 @@ void EntityManager::update(float dt, Input& input)
     }
 
     // Remove marked entities
-    entities.erase(std::remove_if(entities.begin(), entities.end(),
-                                  [](const std::unique_ptr<Entity>& entity) { return entity->isMarkedForDeletion(); }),
-                   entities.end());
+    std::erase_if(entities, [](const std::unique_ptr<Entity>& e) { return e->isMarkedForDeletion(); });
 
     // Add pending entities.
-    entities.insert(entities.end(), std::make_move_iterator(pendingEntities.begin()),
-                    std::make_move_iterator(pendingEntities.end()));
+    std::ranges::move(pendingEntities, std::back_inserter(entities));
 
     pendingEntities.clear();
 }
