@@ -28,5 +28,5 @@ private:
     sf::RenderWindow window;
     Input input;
 
-    EntityManager entityManager;
+    GameObjectManager entityManager;
 };

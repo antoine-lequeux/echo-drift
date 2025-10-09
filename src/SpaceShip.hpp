@@ -1,20 +1,20 @@
 #pragma once
-#include "Entity.hpp"
+#include "GameObject.hpp"
 #include "Projectile.hpp"
 
 // Class representing the player's spaceship.
-class SpaceShip : public Entity
+class SpaceShip : public GameObject
 {
 public:
 
     SpaceShip(std::string texturePath);
 
     // Update the spaceship's state based on input and elapsed time.
-    void updateBehavior(float dt, Input& input, EntityManager& entityManager) override;
+    void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) override;
 
 private:
 
-    void shootProjectile(EntityManager& entityManager);
+    void shootProjectile(GameObjectManager& entityManager);
 
     // Movement speed in pixels per second.
     float moveSpeed = 400.f;

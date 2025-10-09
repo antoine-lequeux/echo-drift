@@ -1,8 +1,8 @@
 #pragma once
-#include "Entity.hpp"
+#include "GameObject.hpp"
 
-// Class representing a projectile fired by the spaceship.
-class Projectile : public Entity
+// Class representing a projectile moving in a straight line.
+class Projectile : public GameObject
 {
 public:
 
@@ -10,7 +10,7 @@ public:
 
 private:
 
-    void updateBehavior(float dt, Input& input, EntityManager& entityManager) override;
+    void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) override;
 
     // Max distance before disappearing.
     float maxDistance = 800.f;

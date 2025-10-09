@@ -2,20 +2,20 @@
 #include "Input.hpp"
 #include <cmath>
 
-class EntityManager;
-class Entity;
+class GameObjectManager;
+class GameObject;
 
-using Entities = std::vector<std::unique_ptr<Entity>>;
+using GameObjects = std::vector<std::unique_ptr<GameObject>>;
 
 // Base class for all game entities.
-class Entity
+class GameObject
 {
 public:
 
-    Entity(std::string texturePath);
+    GameObject(std::string texturePath);
 
     // Update the entity's state based on elapsed time and input.
-    void update(float dt, Input& input, EntityManager& entityManager);
+    void update(float dt, Input& input, GameObjectManager& entityManager);
 
     // Render the entity to the given window.
     void render(sf::RenderWindow& window);
@@ -54,7 +54,7 @@ public:
 protected:
 
     // Specific update method for derived classes.
-    virtual void updateBehavior(float dt, Input& input, EntityManager& entityManager) = 0;
+    virtual void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) = 0;
 
     // Basic physics update (movement based on speed).
     void updatePhysics(float dt);
@@ -78,15 +78,15 @@ private:
 };
 
 // Manager class to handle all entities in the game.
-class EntityManager
+class GameObjectManager
 {
 public:
 
     // Add a new entity to the manager.
-    void addEntity(std::unique_ptr<Entity> entity);
+    void addEntity(std::unique_ptr<GameObject> entity);
 
     // Provide read-only access to entities for game objects
-    const Entities& getEntities() const;
+    const GameObjects& getEntities() const;
 
 private:
 
@@ -100,8 +100,8 @@ private:
     void render(sf::RenderWindow& window);
 
     // Entities to be added after the current update cycle.
-    Entities pendingEntities;
+    GameObjects pendingEntities;
 
     // All current game entities.
-    Entities entities;
+    GameObjects entities;
 };

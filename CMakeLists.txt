@@ -20,9 +20,11 @@ add_executable(echo-drift
     src/Input.cpp
     src/Application.hpp
     src/Application.cpp
-    src/Entity.hpp
-    src/Entity.cpp
+    src/GameObject.hpp
+    src/GameObject.cpp
     src/Projectile.hpp
     src/Projectile.cpp
+    src/GameManager.hpp
+    src/GameManager.cpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)

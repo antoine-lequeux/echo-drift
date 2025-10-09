@@ -1,7 +1,7 @@
 #include "Projectile.hpp"
 
 Projectile::Projectile(std::string texturePath, sf::Vector2f position, sf::Vector2f speed, float rotation)
-    : Entity(texturePath), startPosition(position)
+    : GameObject(texturePath), startPosition(position)
 {
     setPosition(position);
     setSpeed(speed);
@@ -9,7 +9,7 @@ Projectile::Projectile(std::string texturePath, sf::Vector2f position, sf::Vecto
     setScale({0.2f, 0.2f});
 }
 
-void Projectile::updateBehavior(float dt, Input& input, EntityManager& entityManager)
+void Projectile::updateBehavior(float dt, Input& input, GameObjectManager& entityManager)
 {
     if ((getPosition() - startPosition).length() > maxDistance)
     {
