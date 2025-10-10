@@ -1,7 +1,7 @@
 #pragma once
-#include "GameManager.hpp"
-#include "SpaceShip.hpp"
-#include "Background.hpp"
+
+#include "GameObject.hpp"
+#include "Input.hpp"
 
 // Main class managing the game loop and overall application state.
 class Application
@@ -23,9 +23,6 @@ private:
 
     // Update game state.
     void update(float dt);
-
-    // Render the current frame.
-    void render();
 
     sf::RenderWindow window;
     Input input;

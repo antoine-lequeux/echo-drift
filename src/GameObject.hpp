@@ -1,116 +1,120 @@
 #pragma once
-#include "Input.hpp"
-#include <cmath>
 
+#include "Input.hpp"
+
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <type_traits>
+#include <typeindex>
+
+// Forward declarations to avoid circular dependencies.
 class GameObjectManager;
 class GameObject;
 
-using GameObjects = std::vector<std::unique_ptr<GameObject>>;
+// Context passed to components during update.
+struct Context
+{
+    Input& input;
+    sf::RenderWindow& window;
+    GameObjectManager& manager;
+    float dt;
+};
 
-// Base class for all game entities.
+// Base abstract class for all components.
+class Component
+{
+public:
+
+    Component(GameObject& gameObject) : gameObject(gameObject) {}
+    virtual ~Component() = default;
+
+    // Update method to be implemented by derived components.
+    virtual void update(Context& ctx) = 0;
+
+protected:
+
+    // Reference to the owning GameObject.
+    // The Component is destroyed if the GameObject is destroyed, so this reference is always valid.
+    GameObject& gameObject;
+};
+
+// Class representing a game entity composed of multiple components.
 class GameObject
 {
 public:
 
-    // Create a GameObject with no texture.
-    GameObject();
+    GameObject() = default;
+    virtual ~GameObject() = default;
 
-    // Create a GameObject with a texture and optional draw order.
-    GameObject(std::string texturePath, int drawOrder = 0);
+    // Add a component of type T to the gameObject.
+    // Args are forwarded to the component's constructor.
+    // Returns a reference to the added component.
+    template <typename T, typename... Args>
+    T& addComponent(Args&&... args)
+    {
+        auto type = std::type_index(typeid(T));
+        auto component = std::make_unique<T>(*this, std::forward<Args>(args)...);
+        T& ref = *component;
+        components[type] = std::move(component);
+        return ref;
+    }
 
-    // Update the entity's state based on elapsed time and input.
-    void update(float dt, Input& input, GameObjectManager& entityManager);
+    // Get the component of type T. Returns nullptr if not found.
+    template <typename T>
+    T* getComponent()
+    {
+        auto it = components.find(std::type_index(typeid(T)));
+        if (it != components.end())
+            return static_cast<T*>(it->second.get());
+        return nullptr;
+    }
 
-    // Render the entity to the given window.
-    void render(sf::RenderWindow& window);
-
-    // Setters and getters for position, speed, rotation, and scale:
-    // =========
-    void setPosition(sf::Vector2f position);
-    sf::Vector2f getPosition() const;
-
-    // Convert a local point to world space.
-    sf::Vector2f getLocalPoint(sf::Vector2f localPoint) const;
-
-    void move(sf::Vector2f offset);
-
-    void setSpeed(sf::Vector2f newSpeed);
-    sf::Vector2f getSpeed() const;
-
-    void setRotation(float angle);
-
-    float getRotation() const;
-    float getDisplayRotation() const;
-
-    void setRotationQuantization(float step);
-    float getRotationQuantization() const;
-
-    void setScale(sf::Vector2f factors);
-    sf::Vector2f getScale() const;
-
-    sf::Vector2f getSize() const;
-
-    void setDrawOrder(int order) { drawOrder = order; }
-    int getDrawOrder() const { return drawOrder; }
-    // =========
+    // Update all components of the gameObject.
+    void update(Context& ctx)
+    {
+        for (auto& [type, comp] : components)
+            comp->update(ctx);
+    }
 
     // Setter and getter for the deletion flag.
-    void markForDeletion() { isDead = true; }
+    void destroy() { isDead = true; }
     bool isMarkedForDeletion() const { return isDead; }
-
-protected:
-
-    // Specific update method for derived classes.
-    virtual void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) = 0;
-
-    // Basic physics update (movement based on speed).
-    void updatePhysics(float dt);
 
 private:
 
-    sf::Vector2f speed;
+    std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
 
-    sf::Texture texture;
-    sf::Sprite sprite;
-
-    int drawOrder;
-
-    // Flag to mark the entity for deletion.
+    // Flag to mark the gameObject for deletion.
     bool isDead = false;
-
-    // Rotation handling.
-    float trueRotation = 0.f; // Actual rotation used for gameplay
-    float rotationStep = 6.f; // Rotation quantization step (in degrees)
-
-    // Quantize a rotation angle to the nearest step.
-    float quantizeRotation(float angle) const { return std::round(angle / rotationStep) * rotationStep; }
 };
 
-// Manager class to handle all entities in the game.
+using GameObjects = std::vector<std::unique_ptr<GameObject>>;
+
+// Manager class to handle all gameObjects in the game.
 class GameObjectManager
 {
 public:
 
-    // Add a new entity to the manager.
-    void addEntity(std::unique_ptr<GameObject> entity);
+    // Add a new gameObject to the manager.
+    void spawn(std::unique_ptr<GameObject> gameObject);
 
-    // Provide read-only access to entities for game objects
-    const GameObjects& getEntities() const;
+    // Provide read-only access to gameObjects for game objects
+    const GameObjects& getAll() const;
 
 private:
 
-    // Allow Application to access private update() and render() methods.
+    // Allow Application to access private update() method.
     friend class Application;
 
     // Update all entities and handle addition/removal.
-    void update(float dt, Input& input);
+    void update(float dt, Input& input, sf::RenderWindow& window);
 
-    // Render all entities.
-    void render(sf::RenderWindow& window);
+    // GameObjects to be added after the current update cycle.
+    GameObjects pendingGameObjects;
 
-    // Entities to be added after the current update cycle.
-    GameObjects pendingEntities;
+    // All current gameObjects.
+    GameObjects gameObjects;
 
-    // All current game entities.
-    GameObjects entities;
+    void sortGameObjectsBySpriteDrawOrder(GameObjects& gameObjects);
 };

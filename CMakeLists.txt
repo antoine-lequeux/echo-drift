@@ -14,19 +14,20 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(echo-drift 
     main.cpp
-    src/SpaceShip.hpp
-    src/SpaceShip.cpp
     src/Input.hpp
     src/Input.cpp
     src/Application.hpp
     src/Application.cpp
     src/GameObject.hpp
     src/GameObject.cpp
-    src/Projectile.hpp
-    src/Projectile.cpp
-    src/GameManager.hpp
-    src/GameManager.cpp
-    src/Background.hpp
-    src/Background.cpp
+    src/comps/CSprite.hpp
+    src/comps/CSprite.cpp
+    src/comps/CSpaceShip.hpp
+    src/comps/CSpaceShip.cpp
+    src/comps/CSpeed.hpp
+    src/comps/CDespawner.hpp
+    src/comps/CGameManager.hpp
+    src/comps/CGameManager.cpp
+    
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)
