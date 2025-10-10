@@ -1,6 +1,7 @@
 #include "CSpaceShip.hpp"
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
+#include "CDespawner.hpp"
 
 CSpaceShip::CSpaceShip(GameObject& gameObject) : Component(gameObject) {}
 
@@ -80,6 +81,8 @@ void CSpaceShip::shootProjectile(Context& ctx)
 
     auto& speedComp = projectile->addComponent<CSpeed>(
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});
+
+    projectile->addComponent<CDespawner>();
 
     ctx.manager.spawn(std::move(projectile));
 }
