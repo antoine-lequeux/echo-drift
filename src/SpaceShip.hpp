@@ -26,4 +26,8 @@ private:
     float maxTiltAngle = 25.f;
 
     float targetAngle = 0.f;
+
+    // Seconds between shots.
+    float shootCooldown = 0.15f; 
+    float timeSinceLastShot = 0.f;
 };

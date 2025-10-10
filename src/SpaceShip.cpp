@@ -37,7 +37,8 @@ void SpaceShip::updateBehavior(float dt, Input& input, GameObjectManager& entity
         targetAngle = 0.f;
     }
 
-    if (input.isActionTriggered(Action::Shoot))
+    timeSinceLastShot += dt;
+    if (input.isActionTriggered(Action::Shoot) && timeSinceLastShot >= shootCooldown)
         shootProjectile(entityManager);
 
     // Smoothly interpolate the rotation towards the target angle.
@@ -67,6 +68,8 @@ void SpaceShip::updateBehavior(float dt, Input& input, GameObjectManager& entity
 
 void SpaceShip::shootProjectile(GameObjectManager& entityManager)
 {
+    timeSinceLastShot = 0.f;
+
     sf::Vector2f shipFront = getLocalPoint({0.f, -getSize().y / 2.f});
 
     // Add a new projectile entity.
