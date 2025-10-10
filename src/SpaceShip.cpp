@@ -2,9 +2,9 @@
 #include <cmath>
 #include <iostream>
 
-SpaceShip::SpaceShip(std::string texturePath) : GameObject(texturePath)
+SpaceShip::SpaceShip(std::string texturePath, int drawOrder) : GameObject(texturePath, drawOrder)
 {
-    setPosition({400.f, 300.f});
+    setPosition({0.f, 200.f});
     setScale({3.f, 3.f});
 }
 
@@ -71,5 +71,6 @@ void SpaceShip::shootProjectile(GameObjectManager& entityManager)
 
     // Add a new projectile entity.
     entityManager.addEntity(std::make_unique<Projectile>(
-        "assets/laser/12.png", shipFront, getSpeed() * 0.7f + sf::Vector2f{0.f, -800.f}, getRotation() - 90.f, 0.2f));
+        "assets/laser/12.png", shipFront, sf::Vector2f{getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f},
+        getRotation() - 90.f, 0.2f, 6));
 }

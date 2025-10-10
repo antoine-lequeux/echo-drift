@@ -1,6 +1,11 @@
 #include "Application.hpp"
 
-Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift") { window.setFramerateLimit(60); }
+Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift")
+{
+    window.setFramerateLimit(60);
+    gameView = sf::View({0.f, 0.f}, {1280.f, 720.f});
+    window.setView(gameView);
+}
 
 void Application::run()
 {
@@ -18,8 +23,10 @@ void Application::run()
 
 void Application::setup()
 {
-    entityManager.addEntity(std::make_unique<SpaceShip>("assets/ship.png"));
+    entityManager.addEntity(std::make_unique<SpaceShip>("assets/ship.png", 1));
     entityManager.addEntity(std::make_unique<GameManager>());
+    entityManager.addEntity(std::make_unique<Background>("assets/backgrounds/layer_01_void.png", -10));
+    entityManager.addEntity(std::make_unique<Background>("assets/backgrounds/layer_02_stars.png", -9));
 }
 
 void Application::processEvents()

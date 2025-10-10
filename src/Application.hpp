@@ -1,6 +1,7 @@
 #pragma once
 #include "GameManager.hpp"
 #include "SpaceShip.hpp"
+#include "Background.hpp"
 
 // Main class managing the game loop and overall application state.
 class Application
@@ -30,4 +31,6 @@ private:
     Input input;
 
     GameObjectManager entityManager;
+
+    sf::View gameView;
 };

@@ -10,15 +10,15 @@ void GameManager::updateBehavior(float dt, Input& input, GameObjectManager& enti
         spawnTimer -= spawnInterval;
 
         // Random position within window bounds.
-        float x = getRandomFloat(100.f, 1180.f);
-        float y = -100.f;
+        float x = getRandomFloat(-540.f, 540.f);
+        float y = -400.f;
         sf::Vector2f position = {x, y};
 
         // Random downward speed.
-        sf::Vector2f speed = {getRandomFloat(-40.f, 40.f), getRandomFloat(100.f, 500.f)};
+        sf::Vector2f speed = {getRandomFloat(-40.f, 40.f), getRandomFloat(200.f, 500.f)};
 
         // Create and add a new entity.
-        auto asteroid = std::make_unique<Projectile>("assets/asteroids/asteroid.png", position, speed, 0.f, 2.f);
+        auto asteroid = std::make_unique<Projectile>("assets/asteroids/asteroid.png", position, speed, 0.f, 2.f, 5);
         entityManager.addEntity(std::move(asteroid));
     }
 }

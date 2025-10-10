@@ -15,8 +15,8 @@ public:
     // Create a GameObject with no texture.
     GameObject();
 
-    // Create a GameObject with a texture.
-    GameObject(std::string texturePath);
+    // Create a GameObject with a texture and optional draw order.
+    GameObject(std::string texturePath, int drawOrder = 0);
 
     // Update the entity's state based on elapsed time and input.
     void update(float dt, Input& input, GameObjectManager& entityManager);
@@ -49,6 +49,9 @@ public:
     sf::Vector2f getScale() const;
 
     sf::Vector2f getSize() const;
+
+    void setDrawOrder(int order) { drawOrder = order; }
+    int getDrawOrder() const { return drawOrder; }
     // =========
 
     // Setter and getter for the deletion flag.
@@ -69,6 +72,8 @@ private:
 
     sf::Texture texture;
     sf::Sprite sprite;
+
+    int drawOrder;
 
     // Flag to mark the entity for deletion.
     bool isDead = false;

@@ -1,11 +1,11 @@
 #include "GameObject.hpp"
 #include <algorithm>
-#include <ranges>
 #include <iostream>
+#include <ranges>
 
 GameObject::GameObject() : texture(), sprite(texture) {}
 
-GameObject::GameObject(std::string texturePath) : texture(texturePath), sprite(texture)
+GameObject::GameObject(std::string texturePath, int drawOrder) : texture(texturePath), sprite(texture), drawOrder(drawOrder)
 {
     // Center the origin for easier transformations.
     sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
@@ -101,6 +101,9 @@ void GameObjectManager::update(float dt, Input& input)
 
 void GameObjectManager::render(sf::RenderWindow& window)
 {
+    // Sort entities by draw order before rendering.
+    std::ranges::sort(entities, std::less{}, &GameObject::getDrawOrder);
+
     for (const auto& entity : entities)
     {
         entity->render(window);

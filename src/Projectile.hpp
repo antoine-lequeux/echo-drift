@@ -6,7 +6,7 @@ class Projectile : public GameObject
 {
 public:
 
-    Projectile(std::string texturePath, sf::Vector2f position, sf::Vector2f speed, float rotation, float scale);
+    Projectile(std::string texturePath, sf::Vector2f position, sf::Vector2f speed, float rotation, float scale, int drawOrder);
 
 private:
 

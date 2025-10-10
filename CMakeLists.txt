@@ -26,5 +26,7 @@ add_executable(echo-drift
     src/Projectile.cpp
     src/GameManager.hpp
     src/GameManager.cpp
+    src/Background.hpp
+    src/Background.cpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)

@@ -7,7 +7,7 @@ class SpaceShip : public GameObject
 {
 public:
 
-    SpaceShip(std::string texturePath);
+    SpaceShip(std::string texturePath, int drawOrder);
 
     // Update the spaceship's state based on input and elapsed time.
     void updateBehavior(float dt, Input& input, GameObjectManager& entityManager) override;
