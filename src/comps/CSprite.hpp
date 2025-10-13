@@ -4,7 +4,7 @@
 
 // Component that handles rendering a sprite with position, rotation, scaling, and draw order.
 // This also serves as a Transform component since Sprites inherently have transform capabilities.
-struct CSprite : Component
+class CSprite : public Component
 {
 public:
 

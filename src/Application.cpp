@@ -1,4 +1,5 @@
 #include "Application.hpp"
+#include "comps/CCollider.hpp"
 #include "comps/CGameManager.hpp"
 #include "comps/CSpaceShip.hpp"
 #include "comps/CSpeed.hpp"
@@ -32,6 +33,7 @@ void Application::setup()
     csprite.setScale({3.f, 3.f});
     spaceShip->addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip->addComponent<CSpaceShip>();
+    spaceShip->addComponent<CCollider>(Layer::Player);
     entityManager.spawn(std::move(spaceShip));
 
     auto gameManager = std::make_unique<GameObject>();

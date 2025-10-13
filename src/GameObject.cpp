@@ -26,8 +26,6 @@ void GameObjectManager::update(float dt, Input& input, sf::RenderWindow& window)
         gameObject->update(ctx);
     }
 
-    std::cout << "GameObject count: " << gameObjects.size() << "\n";
-
     // Remove marked gameObjects.
     std::erase_if(gameObjects, [](const std::unique_ptr<GameObject>& e) { return e->isMarkedForDeletion(); });
 

@@ -1,4 +1,5 @@
 #include "CGameManager.hpp"
+#include "CCollider.hpp"
 #include "CDespawner.hpp"
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
@@ -30,7 +31,9 @@ void CGameManager::update(Context& ctx)
         auto& speedComp = asteroid->addComponent<CSpeed>(speed);
         speedComp.setSpeed(speed);
         asteroid->addComponent<CDespawner>();
-        
+
+        asteroid->addComponent<CCollider>(Layer::Asteroid);
+
         ctx.manager.spawn(std::move(asteroid));
     }
 }

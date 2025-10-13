@@ -1,7 +1,9 @@
 #include "CSpaceShip.hpp"
+#include "CCollider.hpp"
+#include "CDespawner.hpp"
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
-#include "CDespawner.hpp"
+#include "CProjectile.hpp"
 
 CSpaceShip::CSpaceShip(GameObject& gameObject) : Component(gameObject) {}
 
@@ -61,6 +63,25 @@ void CSpaceShip::update(Context& ctx)
     {
         gameObject.getComponent<CSprite>()->setRotation(targetAngle);
     }
+
+    // Check for collisions with asteroids and destroy both on hit.
+    auto thisCollider = gameObject.getComponent<CCollider>();
+    for (auto& obj : ctx.manager.getAll())
+    {
+        if (obj.get() == &gameObject)
+            continue;
+
+        auto otherCollider = obj->getComponent<CCollider>();
+        if (otherCollider && thisCollider && thisCollider->isCollidingWith(*otherCollider))
+        {
+            if (otherCollider->getLayer() == Layer::Asteroid && thisCollider->getLayer() == Layer::Player)
+            {
+                std::cout << "Player hit by asteroid!\n";
+                gameObject.destroy();
+                obj->destroy();
+            }
+        }
+    }
 }
 
 void CSpaceShip::shootProjectile(Context& ctx)
@@ -83,6 +104,10 @@ void CSpaceShip::shootProjectile(Context& ctx)
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});
 
     projectile->addComponent<CDespawner>();
+
+    projectile->addComponent<CCollider>(Layer::Projectile);
+
+    projectile->addComponent<CProjectile>();
 
     ctx.manager.spawn(std::move(projectile));
 }
