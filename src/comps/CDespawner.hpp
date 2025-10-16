@@ -16,7 +16,7 @@ public:
         if (!transform)
             return;
 
-        sf::Vector2f position = transform->getPosition();
+        sf::Vector2f position = transform->getLocalPosition();
         sf::View view = ctx.window.getView();
 
         sf::Vector2f viewCenter = view.getCenter();

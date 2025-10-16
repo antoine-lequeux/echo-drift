@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GameObject.hpp"
+#include <numbers>
 
 // Component that manages game state, for now spawning asteroids.
 class CGameManager : public Component
@@ -15,6 +16,14 @@ private:
 
     // Utility to get a random float in [min, max].
     float getRandomFloat(float min, float max);
+
+    // Utility to get the angle between a given vector and the X axis.
+    float getAngleDegrees(const sf::Vector2f& v)
+    {
+        float angleRad = std::atan2(v.y, v.x);
+        float angleDeg = angleRad * 180.f / std::numbers::pi;
+        return angleDeg;
+    }
 
     float spawnTimer = 0.f;
     float spawnInterval = 0.75f;

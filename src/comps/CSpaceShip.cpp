@@ -49,7 +49,7 @@ void CSpaceShip::update(Context& ctx)
         shootProjectile(ctx);
 
     // Smoothly interpolate the rotation towards the target angle.
-    float currentAngle = transform->getRotation();
+    float currentAngle = transform->getLocalRotation();
     float angleDiff = targetAngle - currentAngle;
 
     // Normalize angle difference to [-180, 180] range.
@@ -105,7 +105,7 @@ void CSpaceShip::shootProjectile(Context& ctx)
         return;
 
     // Get the world position of the point located at the front of the ship.
-    sf::Vector2f shipFront = shipTransform->getLocalPoint({0.f, -shipSprite->getSize().y / 2.f});
+    sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
 
     // Add a new projectile gameObject.
     auto projectile = std::make_unique<GameObject>();
@@ -113,7 +113,7 @@ void CSpaceShip::shootProjectile(Context& ctx)
     auto& transform = projectile->addComponent<CTransform>();
     transform.setPosition(shipFront);
     transform.setScale({0.2f, 0.2f});
-    transform.setRotation(shipTransform->getRotation() - 90.f);
+    transform.setRotation(shipTransform->getLocalRotation() - 90.f);
 
     auto& sprite = projectile->addComponent<CSprite>("assets/laser/12.png", 6);
 

@@ -13,23 +13,28 @@ public:
 
     void update(Context& ctx) override {}
 
-    void setPosition(sf::Vector2f position);
-    sf::Vector2f getPosition() const;
-
+    // Local setters/getters.
+    void setPosition(sf::Vector2f pos);
+    sf::Vector2f getLocalPosition() const;
     void move(sf::Vector2f offset);
 
     void setRotation(float angle);
-    float getRotation() const;
-    float getDisplayRotation() const;
+    float getLocalRotation() const;
 
     void setRotationQuantization(float step);
     float getRotationQuantization() const;
 
     void setScale(sf::Vector2f factors);
-    sf::Vector2f getScale() const;
+    sf::Vector2f getLocalScale() const;
+
+    // Global getters.
+    sf::Vector2f getGlobalPosition() const;
+    float getGlobalRotation() const;
+    float getDisplayRotation() const;
+    sf::Vector2f getGlobalScale() const;
 
     // Convert a local point to world space.
-    sf::Vector2f getLocalPoint(sf::Vector2f localPoint) const;
+    sf::Vector2f getGlobalPoint(sf::Vector2f localPoint) const;
 
 private:
 
@@ -39,4 +44,7 @@ private:
     sf::Vector2f scale{1.f, 1.f};
 
     float quantizeRotation(float angle) const { return std::round(angle / rotationStep) * rotationStep; }
+
+    // Helper to get parent transform if exists.
+    const CTransform* getParentTransform() const;
 };

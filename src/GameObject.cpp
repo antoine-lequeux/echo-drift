@@ -4,6 +4,7 @@
 
 #include "GameObject.hpp"
 #include "comps/CSprite.hpp"
+#include "comps/CTransform.hpp"
 
 void GameObjectManager::spawn(std::unique_ptr<GameObject> gameObject)
 {
@@ -66,4 +67,15 @@ void GameObjectManager::sortGameObjectsBySpriteDrawOrder(GameObjects& gameObject
     // Move the sorted gameObjects back to their original positions.
     for (size_t i = 0; i < positions.size(); ++i)
         gameObjects[positions[i]] = std::move(tmp[i]);
+}
+
+void GameObject::addChild(GameObject& gameObject)
+{
+    if (!getComponent<CTransform>())
+    {
+        std::cerr << "A GameObject without a Transform cannot have children.\n";
+        return;
+    }
+    children.push_back(&gameObject);
+    gameObject.parent = this;
 }

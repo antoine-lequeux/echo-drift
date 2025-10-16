@@ -17,9 +17,9 @@ void CSprite::update(Context& ctx)
     sprite.setColor(color);
 
     // Apply transform data.
-    sprite.setPosition(transform->getPosition());
+    sprite.setPosition(transform->getGlobalPosition());
     sprite.setRotation(sf::degrees(transform->getDisplayRotation()));
-    sprite.setScale(transform->getScale());
+    sprite.setScale(transform->getGlobalScale());
 
     // Center origin.
     sf::FloatRect bounds = sprite.getLocalBounds();
@@ -62,7 +62,7 @@ sf::Vector2f CSprite::getWorldSize() const
     if (transform)
     {
         // Apply the scale.
-        sf::Vector2f scale = transform->getScale();
+        sf::Vector2f scale = transform->getLocalScale();
         size.x *= scale.x;
         size.y *= scale.y;
     }

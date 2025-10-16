@@ -77,13 +77,34 @@ public:
             comp->update(ctx);
     }
 
+    void addChild(GameObject& gameObject);
+    std::vector<GameObject*>& getChildren() { return children; }
+    GameObject* getParent() const { return parent; }
+
+    // Recursive destruction of all children.
+    void destroyChildren()
+    {
+        for (auto* child : children)
+        {
+            child->isDead = true;
+            child->destroyChildren();
+        }
+    }
+
     // Setter and getter for the deletion flag.
-    void destroy() { isDead = true; }
+    void destroy()
+    {
+        isDead = true;
+        destroyChildren();
+    }
     bool isMarkedForDeletion() const { return isDead; }
 
 private:
 
     std::unordered_map<std::type_index, std::unique_ptr<Component>> components;
+
+    GameObject* parent = nullptr;
+    std::vector<GameObject*> children;
 
     // Flag to mark the gameObject for deletion.
     bool isDead = false;
