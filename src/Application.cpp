@@ -28,33 +28,29 @@ void Application::run()
 
 void Application::setup()
 {
-    auto spaceShip = std::make_unique<GameObject>();
+    auto& spaceShip = entityManager.spawn();
 
-    auto& ctransform = spaceShip->addComponent<CTransform>();
+    auto& ctransform = spaceShip.addComponent<CTransform>();
     ctransform.setPosition({0.f, 200.f});
     ctransform.setScale({3.f, 3.f});
 
-    auto& csprite = spaceShip->addComponent<CSprite>("assets/ship.png", 1);
-    spaceShip->addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
-    spaceShip->addComponent<CSpaceShip>();
-    spaceShip->addComponent<CCollider>(Layer::Player);
-    entityManager.spawn(std::move(spaceShip));
+    auto& csprite = spaceShip.addComponent<CSprite>("assets/ship.png", 1);
+    spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
+    spaceShip.addComponent<CSpaceShip>();
+    spaceShip.addComponent<CCollider>(Layer::Player);
 
-    auto gameManager = std::make_unique<GameObject>();
-    gameManager->addComponent<CGameManager>();
-    entityManager.spawn(std::move(gameManager));
+    auto& gameManager = entityManager.spawn();
+    gameManager.addComponent<CGameManager>();
 
-    auto background1 = std::make_unique<GameObject>();
-    auto& ctransform1 = background1->addComponent<CTransform>();
+    auto& background1 = entityManager.spawn();
+    auto& ctransform1 = background1.addComponent<CTransform>();
     ctransform1.setScale({2.f, 2.f});
-    auto& csprite1 = background1->addComponent<CSprite>("assets/backgrounds/layer_01_void.png", -10);
-    entityManager.spawn(std::move(background1));
+    auto& csprite1 = background1.addComponent<CSprite>("assets/backgrounds/layer_01_void.png", -10);
 
-    auto background2 = std::make_unique<GameObject>();
-    auto& ctransform2 = background2->addComponent<CTransform>();
+    auto& background2 = entityManager.spawn();
+    auto& ctransform2 = background2.addComponent<CTransform>();
     ctransform2.setScale({2.f, 2.f});
-    auto& csprite2 = background2->addComponent<CSprite>("assets/backgrounds/layer_02_stars.png", -9);
-    entityManager.spawn(std::move(background2));
+    auto& csprite2 = background2.addComponent<CSprite>("assets/backgrounds/layer_02_stars.png", -9);
 }
 
 void Application::processEvents()

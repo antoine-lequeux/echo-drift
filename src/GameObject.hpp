@@ -117,8 +117,9 @@ class GameObjectManager
 {
 public:
 
-    // Add a new gameObject to the manager.
-    void spawn(std::unique_ptr<GameObject> gameObject);
+    // Create and add a new gameObject to the manager.
+    // Returns a reference to the new gameObject.
+    GameObject& spawn();
 
     // Provide read-only access to gameObjects for game objects
     const GameObjects& getAll() const;

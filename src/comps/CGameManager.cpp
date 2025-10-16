@@ -20,38 +20,34 @@ void CGameManager::update(Context& ctx)
         sf::Vector2f speed = {getRandomFloat(-40.f, 40.f), getRandomFloat(200.f, 500.f)};
 
         // Create the flame entity.
-        auto flame = std::make_unique<GameObject>();
+        auto& flame = ctx.manager.spawn();
 
-        auto& transform = flame->addComponent<CTransform>();
+        auto& transform = flame.addComponent<CTransform>();
         transform.setPosition(position);
         transform.setScale({-3.f, 3.f});
         transform.setRotation(getAngleDegrees(speed));
 
-        auto& speedComp = flame->addComponent<CSpeed>(speed);
+        auto& speedComp = flame.addComponent<CSpeed>(speed);
         speedComp.setSpeed(speed);
 
-        flame->addComponent<CDespawner>();
+        flame.addComponent<CDespawner>();
 
-        flame->addComponent<CSprite>("assets/effects/flame01.png", 4);
+        flame.addComponent<CSprite>("assets/effects/flame01.png", 4);
 
-        flame->addComponent<CCollider>(Layer::Asteroid);
+        flame.addComponent<CCollider>(Layer::Asteroid);
 
         // Create the asteroid entity.
-        auto asteroid = std::make_unique<GameObject>();
+        auto& asteroid = ctx.manager.spawn();
 
-        auto& transform1 = asteroid->addComponent<CTransform>();
+        auto& transform1 = asteroid.addComponent<CTransform>();
         transform1.setPosition({-10.f, 0.f});
         transform1.setRotation(getRandomFloat(0.f, 360.f));
         transform1.setScale({0.66f, 0.66f});
 
-        asteroid->addComponent<CSprite>("assets/asteroids/asteroid.png", 5);
+        asteroid.addComponent<CSprite>("assets/asteroids/asteroid.png", 5);
 
         // Add the asteroid as a child of the flame.
-        flame->addChild(*asteroid);
-
-        // Spawn entities.
-        ctx.manager.spawn(std::move(flame));
-        ctx.manager.spawn(std::move(asteroid));
+        flame.addChild(asteroid);
     }
 }
 

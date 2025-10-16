@@ -108,23 +108,21 @@ void CSpaceShip::shootProjectile(Context& ctx)
     sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
 
     // Add a new projectile gameObject.
-    auto projectile = std::make_unique<GameObject>();
+    auto& projectile = ctx.manager.spawn();
 
-    auto& transform = projectile->addComponent<CTransform>();
+    auto& transform = projectile.addComponent<CTransform>();
     transform.setPosition(shipFront);
     transform.setScale({0.2f, 0.2f});
     transform.setRotation(shipTransform->getLocalRotation() - 90.f);
 
-    auto& sprite = projectile->addComponent<CSprite>("assets/laser/12.png", 6);
+    auto& sprite = projectile.addComponent<CSprite>("assets/laser/12.png", 6);
 
-    auto& speedComp = projectile->addComponent<CSpeed>(
+    auto& speedComp = projectile.addComponent<CSpeed>(
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});
 
-    projectile->addComponent<CDespawner>();
+    projectile.addComponent<CDespawner>();
 
-    projectile->addComponent<CCollider>(Layer::Projectile);
+    projectile.addComponent<CCollider>(Layer::Projectile);
 
-    projectile->addComponent<CProjectile>();
-
-    ctx.manager.spawn(std::move(projectile));
+    projectile.addComponent<CProjectile>();
 }

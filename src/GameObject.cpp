@@ -6,9 +6,12 @@
 #include "comps/CSprite.hpp"
 #include "comps/CTransform.hpp"
 
-void GameObjectManager::spawn(std::unique_ptr<GameObject> gameObject)
+GameObject& GameObjectManager::spawn()
 {
-    pendingGameObjects.push_back(std::move(gameObject));
+    auto newGameObject = std::make_unique<GameObject>();
+    GameObject& ref = *newGameObject;
+    pendingGameObjects.push_back(std::move(newGameObject));
+    return ref;
 }
 
 const GameObjects& GameObjectManager::getAll() const { return gameObjects; }
