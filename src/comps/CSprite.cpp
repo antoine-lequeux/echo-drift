@@ -1,61 +1,71 @@
 #include "CSprite.hpp"
 
-CSprite::CSprite(GameObject& gameObject, std::string texturePath, int drawOrder)
-    : Component(gameObject), texture(texturePath), sprite(texture), drawOrder(drawOrder)
+CSprite::CSprite(GameObject& gameObject, const std::string& texturePath, int drawOrder)
+    : Component(gameObject), texture(texturePath), drawOrder(drawOrder)
 {
-    // Center the origin for easier transformations.
-    sprite.setOrigin({sprite.getLocalBounds().size.x / 2.f, sprite.getLocalBounds().size.y / 2.f});
+    textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture.getSize());
 }
 
-void CSprite::update(Context& ctx) { ctx.window.draw(sprite); }
-
-void CSprite::setPosition(sf::Vector2f position) { sprite.setPosition(position); }
-
-sf::Vector2f CSprite::getPosition() const { return sprite.getPosition(); }
-
-sf::Vector2f CSprite::getLocalPoint(sf::Vector2f localPoint) const
+void CSprite::update(Context& ctx)
 {
-    // Adjust for scaling.
-    sf::Vector2f scale = sprite.getScale();
-    localPoint.x /= scale.x;
-    localPoint.y /= scale.y;
+    auto transform = gameObject.getComponent<CTransform>();
+    if (!transform)
+        return;
 
-    // Calculate the sprite's half size.
-    sf::Vector2f halfSize = {sprite.getLocalBounds().size.x * 0.5f, sprite.getLocalBounds().size.y * 0.5f};
+    sf::Sprite sprite(texture);
+    sprite.setTextureRect(textureRect);
+    sprite.setColor(color);
 
-    // Center the local point relative to sprite's origin.
-    localPoint = {localPoint.x + halfSize.x, localPoint.y + halfSize.y};
+    // Apply transform data.
+    sprite.setPosition(transform->getPosition());
+    sprite.setRotation(sf::degrees(transform->getDisplayRotation()));
+    sprite.setScale(transform->getScale());
 
-    // Get the sprite's transformation.
-    sf::Transform transform = sprite.getTransform();
+    // Center origin.
+    sf::FloatRect bounds = sprite.getLocalBounds();
+    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
 
-    // Transform the local point to world space.
-    return transform.transformPoint(localPoint);
+    ctx.window.draw(sprite);
 }
 
-void CSprite::move(sf::Vector2f offset) { sprite.move(offset); }
-
-void CSprite::setRotation(float angle)
-{
-    // Store true rotation for physics/gameplay.
-    trueRotation = angle;
-    // Display quantized rotation.
-    sprite.setRotation(sf::degrees(quantizeRotation(angle)));
-}
-
-float CSprite::getRotation() const { return trueRotation; }
-
-float CSprite::getDisplayRotation() const { return sprite.getRotation().asDegrees(); }
-
-void CSprite::setRotationQuantization(float step) { rotationStep = step; }
-
-float CSprite::getRotationQuantization() const { return rotationStep; }
-
-void CSprite::setScale(sf::Vector2f factors) { sprite.setScale(factors); }
-
-sf::Vector2f CSprite::getScale() const { return sprite.getScale(); }
+void CSprite::setTextureRect(const sf::IntRect& rect) { textureRect = rect; }
+void CSprite::setColor(const sf::Color& col) { color = col; }
 
 sf::Vector2f CSprite::getSize() const
 {
-    return {sprite.getLocalBounds().size.x * getScale().x, sprite.getLocalBounds().size.y * getScale().y};
+    sf::Vector2f baseSize;
+
+    // If no texture rect was specified...
+    if (textureRect.size.x == 0 || textureRect.size.y == 0)
+    {
+        // ...we use the base texture size...
+        baseSize.x = static_cast<float>(texture.getSize().x);
+        baseSize.y = static_cast<float>(texture.getSize().y);
+    }
+    else
+    {
+        // ...else we use the size of the texture rect.
+        baseSize.x = static_cast<float>(textureRect.size.x);
+        baseSize.y = static_cast<float>(textureRect.size.y);
+    }
+
+    return baseSize;
+}
+
+sf::Vector2f CSprite::getWorldSize() const
+{
+    // Get the base size.
+    sf::Vector2f size = getSize();
+
+    // Get the transform data.
+    auto transform = gameObject.getComponent<CTransform>();
+    if (transform)
+    {
+        // Apply the scale.
+        sf::Vector2f scale = transform->getScale();
+        size.x *= scale.x;
+        size.y *= scale.y;
+    }
+
+    return size;
 }

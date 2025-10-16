@@ -10,7 +10,13 @@ public:
 
     CSpeed(GameObject& gameObject, sf::Vector2f initialSpeed) : Component(gameObject), speed(initialSpeed) {}
 
-    void update(Context& ctx) override { gameObject.getComponent<CSprite>()->move(speed * ctx.dt); }
+    void update(Context& ctx) override
+    {
+        auto transform = gameObject.getComponent<CTransform>();
+        if (!transform)
+            return;
+        transform->move(speed * ctx.dt);
+    }
 
     void setSpeed(sf::Vector2f newSpeed) { speed = newSpeed; }
     sf::Vector2f getSpeed() const { return speed; }

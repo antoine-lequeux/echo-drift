@@ -1,14 +1,22 @@
 #include "CSpaceShip.hpp"
 #include "CCollider.hpp"
 #include "CDespawner.hpp"
+#include "CProjectile.hpp"
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
-#include "CProjectile.hpp"
 
 CSpaceShip::CSpaceShip(GameObject& gameObject) : Component(gameObject) {}
 
 void CSpaceShip::update(Context& ctx)
 {
+    auto transform = gameObject.getComponent<CTransform>();
+    if (!transform)
+        return;
+
+    auto speedComp = gameObject.getComponent<CSpeed>();
+    if (!speedComp)
+        return;
+
     sf::Vector2f direction{0.f, 0.f};
 
     if (ctx.input.isActionActive(Action::MoveUp))
@@ -24,7 +32,7 @@ void CSpaceShip::update(Context& ctx)
     {
         // Normalize and apply movement speed.
         sf::Vector2f speed = direction.normalized() * moveSpeed;
-        gameObject.getComponent<CSpeed>()->setSpeed(speed);
+        speedComp->setSpeed(speed);
 
         // Calculate target angle based on horizontal movement.
         float horizontalFactor = direction.normalized().x;
@@ -32,7 +40,7 @@ void CSpaceShip::update(Context& ctx)
     }
     else
     {
-        gameObject.getComponent<CSpeed>()->setSpeed({0.f, 0.f});
+        speedComp->setSpeed({0.f, 0.f});
         targetAngle = 0.f;
     }
 
@@ -41,7 +49,7 @@ void CSpaceShip::update(Context& ctx)
         shootProjectile(ctx);
 
     // Smoothly interpolate the rotation towards the target angle.
-    float currentAngle = gameObject.getComponent<CSprite>()->getRotation();
+    float currentAngle = transform->getRotation();
     float angleDiff = targetAngle - currentAngle;
 
     // Normalize angle difference to [-180, 180] range.
@@ -57,11 +65,11 @@ void CSpaceShip::update(Context& ctx)
         // Use sine easing for smooth acceleration and deceleration.
         float easeFactor = std::sin(std::min(std::abs(angleDiff) / maxTiltAngle, 1.f) * 3.14159f / 2.f);
         float angleChange = std::clamp(angleDiff, -rotationAmount, rotationAmount) * easeFactor;
-        gameObject.getComponent<CSprite>()->setRotation(currentAngle + angleChange);
+        transform->setRotation(currentAngle + angleChange);
     }
     else
     {
-        gameObject.getComponent<CSprite>()->setRotation(targetAngle);
+        transform->setRotation(targetAngle);
     }
 
     // Check for collisions with asteroids and destroy both on hit.
@@ -88,17 +96,26 @@ void CSpaceShip::shootProjectile(Context& ctx)
 {
     timeSinceLastShot = 0.f;
 
-    auto shipSprite = gameObject.getComponent<CSprite>();
+    auto shipTransform = gameObject.getComponent<CTransform>();
+    if (!shipTransform)
+        return;
 
-    sf::Vector2f shipFront = shipSprite->getLocalPoint({0.f, -shipSprite->getSize().y / 2.f});
+    auto shipSprite = gameObject.getComponent<CSprite>();
+    if (!shipSprite)
+        return;
+
+    // Get the world position of the point located at the front of the ship.
+    sf::Vector2f shipFront = shipTransform->getLocalPoint({0.f, -shipSprite->getSize().y / 2.f});
 
     // Add a new projectile gameObject.
     auto projectile = std::make_unique<GameObject>();
 
+    auto& transform = projectile->addComponent<CTransform>();
+    transform.setPosition(shipFront);
+    transform.setScale({0.2f, 0.2f});
+    transform.setRotation(shipTransform->getRotation() - 90.f);
+
     auto& sprite = projectile->addComponent<CSprite>("assets/laser/12.png", 6);
-    sprite.setPosition(shipFront);
-    sprite.setScale({0.2f, 0.2f});
-    sprite.setRotation(gameObject.getComponent<CSprite>()->getRotation() - 90.f);
 
     auto& speedComp = projectile->addComponent<CSpeed>(
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});

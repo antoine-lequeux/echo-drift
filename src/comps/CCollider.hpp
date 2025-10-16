@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GameObject.hpp"
+#include "CSpaceShip.hpp"
 #include "CSprite.hpp"
 
 // Simple collision layers for different entity types.
@@ -24,8 +25,15 @@ public:
     // Get the bounding rectangle of the collider in world space.
     sf::FloatRect getBounds() const
     {
-        return sf::FloatRect{gameObject.getComponent<CSprite>()->getPosition(),
-                             gameObject.getComponent<CSprite>()->getSize()};
+        auto transform = gameObject.getComponent<CTransform>();
+        if (!transform)
+            return sf::FloatRect();
+
+        auto sprite = gameObject.getComponent<CSprite>();
+        if (!sprite)
+            return sf::FloatRect();
+
+        return sf::FloatRect{transform->getPosition(), sprite->getWorldSize()};
     }
 
     Layer getLayer() const { return layer; }

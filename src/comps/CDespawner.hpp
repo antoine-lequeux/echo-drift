@@ -12,7 +12,11 @@ public:
 
     void update(Context& ctx) override
     {
-        sf::Vector2f position = gameObject.getComponent<CSprite>()->getPosition();
+        auto transform = gameObject.getComponent<CTransform>();
+        if (!transform)
+            return;
+
+        sf::Vector2f position = transform->getPosition();
         sf::View view = ctx.window.getView();
 
         sf::Vector2f viewCenter = view.getCenter();

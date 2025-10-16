@@ -23,10 +23,12 @@ void CGameManager::update(Context& ctx)
         // Create and add a new entity.
         auto asteroid = std::make_unique<GameObject>();
 
+        auto& transform = asteroid->addComponent<CTransform>();
+        transform.setPosition(position);
+        transform.setScale({2.f, 2.f});
+        transform.setRotation(getRandomFloat(0.f, 360.f));
+
         auto& sprite = asteroid->addComponent<CSprite>("assets/asteroids/asteroid.png", 5);
-        sprite.setPosition(position);
-        sprite.setScale({2.f, 2.f});
-        sprite.setRotation(getRandomFloat(0.f, 360.f));
 
         auto& speedComp = asteroid->addComponent<CSpeed>(speed);
         speedComp.setSpeed(speed);
