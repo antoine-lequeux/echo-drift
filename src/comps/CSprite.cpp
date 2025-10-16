@@ -62,7 +62,7 @@ sf::Vector2f CSprite::getWorldSize() const
     if (transform)
     {
         // Apply the scale.
-        sf::Vector2f scale = transform->getLocalScale();
+        sf::Vector2f scale = transform->getGlobalScale();
         size.x *= scale.x;
         size.y *= scale.y;
     }

@@ -80,7 +80,7 @@ void CSpaceShip::update(Context& ctx)
             continue;
 
         auto otherCollider = obj->getComponent<CCollider>();
-        if (otherCollider && thisCollider && thisCollider->isCollidingWith(*otherCollider))
+        if (otherCollider && thisCollider && thisCollider->isTouching(*otherCollider))
         {
             if (otherCollider->getLayer() == Layer::Asteroid && thisCollider->getLayer() == Layer::Player)
             {
@@ -122,7 +122,10 @@ void CSpaceShip::shootProjectile(Context& ctx)
 
     projectile.addComponent<CDespawner>();
 
-    projectile.addComponent<CCollider>(Layer::Projectile);
+    auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
+    col.rx = 80.f;
+    col.ry = 80.f;
+    col.offset.y = -30.f;
 
     projectile.addComponent<CProjectile>();
 }

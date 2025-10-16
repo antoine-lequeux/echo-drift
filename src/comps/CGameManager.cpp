@@ -32,9 +32,12 @@ void CGameManager::update(Context& ctx)
 
         flame.addComponent<CDespawner>();
 
-        flame.addComponent<CSprite>("assets/effects/flame01.png", 4);
+        auto& csprite = flame.addComponent<CSprite>("assets/effects/flame01.png", 4);
 
-        flame.addComponent<CCollider>(Layer::Asteroid);
+        auto& col = flame.addComponent<CEllipseCollider>(Layer::Asteroid);
+        col.rx = 12.f;
+        col.ry = 12.f;
+        col.offset.y = 35.f;
 
         // Create the asteroid entity.
         auto& asteroid = ctx.manager.spawn();

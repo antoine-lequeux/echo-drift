@@ -32,8 +32,6 @@ public:
     // Update method to be implemented by derived components.
     virtual void update(Context& ctx) = 0;
 
-protected:
-
     // Reference to the owning GameObject.
     // The Component is destroyed if the GameObject is destroyed, so this reference is always valid.
     GameObject& gameObject;
@@ -67,6 +65,15 @@ public:
         auto it = components.find(std::type_index(typeid(T)));
         if (it != components.end())
             return static_cast<T*>(it->second.get());
+
+        // If nothing is found, try to find a component that is a parent of T.
+        // Should improved via caching later.
+        for (auto& [type, comp] : components)
+        {
+            if (auto ptr = dynamic_cast<T*>(comp.get()))
+                return ptr;
+        }
+
         return nullptr;
     }
 

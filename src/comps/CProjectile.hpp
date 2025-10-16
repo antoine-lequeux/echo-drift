@@ -20,7 +20,7 @@ public:
                 continue;
 
             auto otherCollider = obj->getComponent<CCollider>();
-            if (otherCollider && thisCollider && thisCollider->isCollidingWith(*otherCollider))
+            if (otherCollider && thisCollider && thisCollider->isTouching(*otherCollider))
             {
                 if (otherCollider->getLayer() == Layer::Asteroid && thisCollider->getLayer() == Layer::Projectile)
                 {

@@ -37,7 +37,9 @@ void Application::setup()
     auto& csprite = spaceShip.addComponent<CSprite>("assets/ship.png", 1);
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();
-    spaceShip.addComponent<CCollider>(Layer::Player);
+
+    auto& col = spaceShip.addComponent<CRectangleCollider>(Layer::Player);
+    col.halfSize = csprite.getSize() / 2.f;
 
     auto& gameManager = entityManager.spawn();
     gameManager.addComponent<CGameManager>();

@@ -12,73 +12,83 @@ enum class Layer
     Asteroid
 };
 
-// Component that provides a bounding shape for collision detection.
-// For now the shape is just a rectangle based on the sprite's position and size.
+// Abstract component that provides a bounding shape for collision detection.
 class CCollider : public Component
 {
 public:
 
     CCollider(GameObject& gameObject, Layer layer) : Component(gameObject), layer(layer) {}
+    virtual ~CCollider() = default;
 
-    void update(Context& ctx) override
-    {
-        // sf::FloatRect bounds = getBounds();
+    void update(Context& ctx) override { showBounds(ctx.window); }
 
-        // sf::RectangleShape rect;
-        // rect.setPosition({bounds.position.x, bounds.position.y});
-        // rect.setSize({bounds.size.x, bounds.size.y});
-        // rect.setFillColor(sf::Color::Transparent);
-        // rect.setOutlineColor(sf::Color::Green);
-        // rect.setOutlineThickness(1.f);
-
-        //ctx.window.draw(rect);
-    }
-
-    // Get the bounding rectangle of the collider in world space.
-    sf::FloatRect getBounds() const
-    {
-        auto transform = gameObject.getComponent<CTransform>();
-        if (!transform)
-            return sf::FloatRect();
-
-        auto sprite = gameObject.getComponent<CSprite>();
-        if (!sprite)
-            return sf::FloatRect();
-
-        sf::Vector2f halfSize = sprite->getSize() / 2.f;
-
-        sf::Vector2f topLeft(-halfSize.x, -halfSize.y);
-        sf::Vector2f topRight(halfSize.x, -halfSize.y);
-        sf::Vector2f bottomLeft(-halfSize.x, halfSize.y);
-        sf::Vector2f bottomRight(halfSize.x, halfSize.y);
-
-        sf::Transform t;
-        t.translate(transform->getGlobalPosition());
-        t.rotate(sf::degrees(transform->getGlobalRotation()));
-        t.scale(transform->getGlobalScale());
-
-        topLeft = t.transformPoint(topLeft);
-        topRight = t.transformPoint(topRight);
-        bottomLeft = t.transformPoint(bottomLeft);
-        bottomRight = t.transformPoint(bottomRight);
-
-        float minX = std::min({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
-        float maxX = std::max({topLeft.x, topRight.x, bottomLeft.x, bottomRight.x});
-        float minY = std::min({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
-        float maxY = std::max({topLeft.y, topRight.y, bottomLeft.y, bottomRight.y});
-
-        return sf::FloatRect({minX, minY}, {maxX - minX, maxY - minY});
-    }
-
+    void setLayer(Layer newLayer) { layer = newLayer; }
     Layer getLayer() const { return layer; }
 
-    // Check for collision with another collider using axis-aligned bounding box (AABB) method.
-    bool isCollidingWith(const CCollider& other) const
-    {
-        return getBounds().findIntersection(other.getBounds()).has_value();
-    }
+    // Draw the shape for debugging purposes.
+    virtual void showBounds(sf::RenderWindow& window) const = 0;
 
-private:
+    // Visitor pattern (to handle every combination of collider types).
+    virtual bool isTouching(const CCollider& other) const = 0;
+    virtual bool isTouchingWith(const class CEllipseCollider& other) const = 0;
+    virtual bool isTouchingWith(const class CRectangleCollider& other) const = 0;
+
+protected:
 
     Layer layer;
+};
+
+// Data used to compute collisions between an ellispe collider and another collider.
+struct EllipseData
+{
+    float x, y;
+    float rx, ry;
+};
+
+// Data used to compute collisions between a rectangle collider and another collider.
+struct RectangleData
+{
+    float x, y;
+    float w, h;
+};
+
+// Helper functions to handle collision computation.
+bool checkCollision(const EllipseData& a, const EllipseData& b);
+bool checkCollision(const RectangleData& a, const RectangleData& b);
+bool checkCollision(const EllipseData& e, const RectangleData& r);
+
+// Derived component providing an ellipsoidal collider.
+class CEllipseCollider : public CCollider
+{
+public:
+
+    CEllipseCollider(GameObject& gameObject, Layer layer) : CCollider(gameObject, layer) {}
+
+    void showBounds(sf::RenderWindow& window) const override;
+
+    bool isTouching(const CCollider& other) const override;
+
+    bool isTouchingWith(const CEllipseCollider& other) const override;
+    bool isTouchingWith(const CRectangleCollider& other) const override;
+
+    sf::Vector2f offset;
+    float rx, ry;
+};
+
+// Derived component providing a rectangular collider.
+class CRectangleCollider : public CCollider
+{
+public:
+
+    CRectangleCollider(GameObject& gameObject, Layer layer) : CCollider(gameObject, layer) {}
+
+    void showBounds(sf::RenderWindow& window) const override;
+
+    bool isTouching(const CCollider& other) const override;
+
+    bool isTouchingWith(const CEllipseCollider& other) const override;
+    bool isTouchingWith(const CRectangleCollider& other) const override;
+
+    sf::Vector2f offset;
+    sf::Vector2f halfSize;
 };

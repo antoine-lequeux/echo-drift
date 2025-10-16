@@ -29,6 +29,7 @@ add_executable(echo-drift
     src/comps/CGameManager.hpp
     src/comps/CGameManager.cpp
     src/comps/CCollider.hpp
+    src/comps/CCollider.cpp
     src/comps/CProjectile.hpp
     src/comps/CTransform.hpp
     src/comps/Ctransform.cpp
