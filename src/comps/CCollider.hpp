@@ -43,6 +43,7 @@ struct EllipseData
 {
     float x, y;
     float rx, ry;
+    float rotation = 0.f;
 };
 
 // Data used to compute collisions between a rectangle collider and another collider.
@@ -50,12 +51,30 @@ struct RectangleData
 {
     float x, y;
     float w, h;
+    float rotation = 0.f;
 };
 
-// Helper functions to handle collision computation.
-bool checkCollision(const EllipseData& a, const EllipseData& b);
-bool checkCollision(const RectangleData& a, const RectangleData& b);
-bool checkCollision(const EllipseData& e, const RectangleData& r);
+using Polygon = std::vector<sf::Vector2f>;
+
+// Helpers that turn ellipses and rectangles to Polygons for unified logic.
+Polygon ellipseToPolygon(EllipseData& e, unsigned int n = 32);
+Polygon rectangleToPolygon(RectangleData& r);
+
+// Helper that returns true if the projection of polygons A and B onto the axis overlap.
+bool overlapOnAxis(const Polygon& shapeA, const Polygon& shapeB, const sf::Vector2f& axis);
+
+// Helper that returns true if there is no axis separating polygons A and B (SAT collision check).
+bool polygonsCollide(const Polygon& a, const Polygon& b);
+
+// Turn a polygon into a sf::ConvexShape so it can be rendered.
+sf::ConvexShape makeConvexShape(const Polygon& points);
+
+// Helpers that create a EllipseData or a RectangleData based on a Collider.
+EllipseData makeEllipseData(const CEllipseCollider& e);
+RectangleData makeRectangleData(const CRectangleCollider& r);
+
+// Helper that rotates a point around another point.
+sf::Vector2f rotatePoint(const sf::Vector2f& p, const sf::Vector2f& center, float angleDeg);
 
 // Derived component providing an ellipsoidal collider.
 class CEllipseCollider : public CCollider
