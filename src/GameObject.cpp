@@ -6,6 +6,8 @@
 #include "comps/CSprite.hpp"
 #include "comps/CTransform.hpp"
 
+GameObjectManager::GameObjectManager(ResourceManager& rm) : resources(rm) {}
+
 GameObject& GameObjectManager::spawn()
 {
     auto newGameObject = std::make_unique<GameObject>();

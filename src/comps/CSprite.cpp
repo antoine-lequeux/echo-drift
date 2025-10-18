@@ -1,10 +1,10 @@
 #include "CSprite.hpp"
 
-CSprite::CSprite(GameObject& gameObject, const std::string& texturePath, int drawOrder)
-    : Component(gameObject), texture(texturePath), drawOrder(drawOrder)
+CSprite::CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, int drawOrder)
+    : Component(gameObject), texture(tex), drawOrder(drawOrder)
 {
-    textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture.getSize());
-    texture.setSmooth(false);
+    textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture->getSize());
+    texture->setSmooth(false);
 }
 
 void CSprite::update(Context& ctx)
@@ -13,7 +13,7 @@ void CSprite::update(Context& ctx)
     if (!transform)
         return;
 
-    sf::Sprite sprite(texture);
+    sf::Sprite sprite(*texture);
     sprite.setTextureRect(textureRect);
     sprite.setColor(color);
 
@@ -40,8 +40,8 @@ sf::Vector2f CSprite::getSize() const
     if (textureRect.size.x == 0 || textureRect.size.y == 0)
     {
         // ...we use the base texture size...
-        baseSize.x = static_cast<float>(texture.getSize().x);
-        baseSize.y = static_cast<float>(texture.getSize().y);
+        baseSize.x = static_cast<float>(texture->getSize().x);
+        baseSize.y = static_cast<float>(texture->getSize().y);
     }
     else
     {

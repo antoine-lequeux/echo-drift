@@ -8,7 +8,7 @@ class CSprite : public Component
 {
 public:
 
-    CSprite(GameObject& gameObject, const std::string& texturePath, int drawOrder = 0);
+    CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, int drawOrder = 0);
 
     void update(Context& ctx) override;
 
@@ -23,7 +23,7 @@ public:
 
 private:
 
-    sf::Texture texture;
+    std::shared_ptr<sf::Texture> texture;
     sf::IntRect textureRect;
     sf::Color color = sf::Color::White;
     int drawOrder;

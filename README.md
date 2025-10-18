@@ -6,3 +6,7 @@ It will be a simple 2D game where the player can control a spaceship and shoot e
 It relies on SFML3 to manage graphics and audio.
 
 It is still in a very early stage of development, and I'm actively working on the project.
+
+
+Credit for the texture set:
+https://ravenmore.itch.io/pixel-space-shooter-assets

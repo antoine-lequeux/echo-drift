@@ -26,11 +26,11 @@ void CGameManager::update(Context& ctx)
         transform.setPosition(position);
         transform.setRotation(Tools::getRandom(0.f, 360.f));
 
-        static std::string root = "assets/asteroids/";
-        static std::string types[4] = {"Asteroid 01_png_processed.png", "Asteroid 02_png_processed.png",
-                                       "Asteroid 03_png_processed.png", "Asteroid 04_png_processed.png"};
+        static std::string types[4] = {"asteroid1", "asteroid2", "asteroid3", "asteroid4"};
 
-        auto& sprite = asteroid.addComponent<CSprite>(root + types[Tools::getRandom(0, 3)], 5);
+        // Create a Sprite component with an asteroid texture chosen randomly among four.
+        auto& sprite =
+            asteroid.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(types[Tools::getRandom(0, 3)]), 5);
 
         auto& col = asteroid.addComponent<CEllipseCollider>(Layer::Asteroid);
         col.rx = sprite.getWorldSize().x / 2.f;

@@ -27,6 +27,7 @@ private:
     sf::RenderWindow window;
     Input input;
 
+    ResourceManager resourceManager;
     GameObjectManager entityManager;
 
     sf::View gameView;

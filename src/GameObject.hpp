@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Input.hpp"
+#include "ResourceManager.hpp"
 #include "Tools.hpp"
 
 #include <cmath>
@@ -125,12 +126,18 @@ class GameObjectManager
 {
 public:
 
+    GameObjectManager(ResourceManager& rm);
+
     // Create and add a new gameObject to the manager.
     // Returns a reference to the new gameObject.
     GameObject& spawn();
 
     // Provide read-only access to gameObjects for game objects
     const GameObjects& getAll() const;
+
+    // This reference is always valid, since the resource manager and the gameobject manager
+    // are both destroyed at the same time, when the app terminates.
+    ResourceManager& resources;
 
 private:
 

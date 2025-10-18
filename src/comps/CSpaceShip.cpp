@@ -114,7 +114,7 @@ void CSpaceShip::shootProjectile(Context& ctx)
     transform.setPosition(shipFront);
     transform.setRotation(shipTransform->getLocalRotation());
 
-    auto& sprite = projectile.addComponent<CSprite>("assets/projectiles/Laser_Medium_png_processed.png", 6);
+    auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>("projectile"), 6);
 
     auto& speedComp = projectile.addComponent<CSpeed>(
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});

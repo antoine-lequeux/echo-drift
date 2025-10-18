@@ -34,5 +34,6 @@ add_executable(echo-drift
     src/comps/CTransform.hpp
     src/comps/Ctransform.cpp
     src/Tools.hpp
+    src/ResourceManager.hpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)
