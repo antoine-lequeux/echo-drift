@@ -10,6 +10,7 @@ Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift")
 {
     window.setFramerateLimit(60);
     gameView = sf::View({0.f, 0.f}, {1280.f, 720.f});
+    gameView.zoom(0.75f);
     window.setView(gameView);
 }
 
@@ -32,9 +33,9 @@ void Application::setup()
 
     auto& ctransform = spaceShip.addComponent<CTransform>();
     ctransform.setPosition({0.f, 200.f});
-    ctransform.setScale({3.f, 3.f});
 
-    auto& csprite = spaceShip.addComponent<CSprite>("assets/ship.png", 1);
+    auto& csprite = spaceShip.addComponent<CSprite>("assets/player/PlayerBlue_Frame_01_png_processed.png", 1);
+
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();
 
@@ -44,15 +45,10 @@ void Application::setup()
     auto& gameManager = entityManager.spawn();
     gameManager.addComponent<CGameManager>();
 
-    auto& background1 = entityManager.spawn();
-    auto& ctransform1 = background1.addComponent<CTransform>();
-    ctransform1.setScale({2.f, 2.f});
-    auto& csprite1 = background1.addComponent<CSprite>("assets/backgrounds/layer_01_void.png", -10);
-
-    auto& background2 = entityManager.spawn();
-    auto& ctransform2 = background2.addComponent<CTransform>();
-    ctransform2.setScale({2.f, 2.f});
-    auto& csprite2 = background2.addComponent<CSprite>("assets/backgrounds/layer_02_stars.png", -9);
+    auto& background = entityManager.spawn();
+    auto& transform1 = background.addComponent<CTransform>();
+    transform1.setScale({4.f, 4.f});
+    background.addComponent<CSprite>("assets/backgrounds/PixelBackgroundSeamlessVertically.png", -10);
 }
 
 void Application::processEvents()

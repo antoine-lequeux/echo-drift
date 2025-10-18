@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Input.hpp"
+#include "Tools.hpp"
 
 #include <cmath>
 #include <iostream>

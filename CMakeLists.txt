@@ -33,5 +33,6 @@ add_executable(echo-drift
     src/comps/CProjectile.hpp
     src/comps/CTransform.hpp
     src/comps/Ctransform.cpp
+    src/Tools.hpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)

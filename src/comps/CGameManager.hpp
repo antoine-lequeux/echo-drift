@@ -14,9 +14,6 @@ public:
 
 private:
 
-    // Utility to get a random float in [min, max].
-    float getRandomFloat(float min, float max);
-
     // Utility to get the angle between a given vector and the X axis.
     float getAngleDegrees(const sf::Vector2f& v)
     {

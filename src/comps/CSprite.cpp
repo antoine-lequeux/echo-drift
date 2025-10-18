@@ -4,6 +4,7 @@ CSprite::CSprite(GameObject& gameObject, const std::string& texturePath, int dra
     : Component(gameObject), texture(texturePath), drawOrder(drawOrder)
 {
     textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture.getSize());
+    texture.setSmooth(false);
 }
 
 void CSprite::update(Context& ctx)

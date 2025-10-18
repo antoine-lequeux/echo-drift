@@ -112,10 +112,9 @@ void CSpaceShip::shootProjectile(Context& ctx)
 
     auto& transform = projectile.addComponent<CTransform>();
     transform.setPosition(shipFront);
-    transform.setScale({0.2f, 0.2f});
-    transform.setRotation(shipTransform->getLocalRotation() - 90.f);
+    transform.setRotation(shipTransform->getLocalRotation());
 
-    auto& sprite = projectile.addComponent<CSprite>("assets/laser/12.png", 6);
+    auto& sprite = projectile.addComponent<CSprite>("assets/projectiles/Laser_Medium_png_processed.png", 6);
 
     auto& speedComp = projectile.addComponent<CSpeed>(
         sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});
@@ -123,9 +122,9 @@ void CSpaceShip::shootProjectile(Context& ctx)
     projectile.addComponent<CDespawner>();
 
     auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
-    col.rx = 80.f;
-    col.ry = 40.f;
-    col.offset.y = -20.f;
+    col.rx = 6.f;
+    col.ry = 6.f;
+    col.offset.y = -15.f;
 
     projectile.addComponent<CProjectile>();
 }
