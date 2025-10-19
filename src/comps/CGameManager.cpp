@@ -6,6 +6,12 @@
 
 void CGameManager::update(Context& ctx)
 {
+    if (ctx.input.isActionTriggered(Action::Debug))
+    {
+        auto settings = ctx.manager.resources.get<GameSettings>("settings");
+        settings->showColliders = !settings->showColliders;
+    }
+
     spawnTimer += ctx.dt;
     if (spawnTimer >= spawnInterval)
     {

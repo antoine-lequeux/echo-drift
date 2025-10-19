@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GameSettings.hpp"
 #include "Input.hpp"
 #include "ResourceManager.hpp"
 #include "Tools.hpp"

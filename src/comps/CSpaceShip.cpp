@@ -104,6 +104,10 @@ void CSpaceShip::shootProjectile(Context& ctx)
     if (!shipSprite)
         return;
 
+    auto shipSpeed = gameObject.getComponent<CSpeed>();
+    if (!shipSpeed)
+        return;
+
     // Get the world position of the point located at the front of the ship.
     sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
 
@@ -111,19 +115,21 @@ void CSpaceShip::shootProjectile(Context& ctx)
     auto& projectile = ctx.manager.spawn();
 
     auto& transform = projectile.addComponent<CTransform>();
-    transform.setPosition(shipFront);
+    transform.setPosition(shipFront + shipSpeed->getSpeed() * ctx.dt * 3.f);
     transform.setRotation(shipTransform->getLocalRotation());
 
     auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>("projectile"), 6);
 
-    auto& speedComp = projectile.addComponent<CSpeed>(
-        sf::Vector2f{gameObject.getComponent<CSpeed>()->getSpeed().x * 0.8f, 0.f} + sf::Vector2f{0.f, -800.f});
+    sf::Vector2f speedDirection = shipFront - shipTransform->getGlobalPosition();
+    sf::Vector2f speed = speedDirection.normalized() * 800.f;
+
+    projectile.addComponent<CSpeed>(speed);
 
     projectile.addComponent<CDespawner>();
 
     auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
-    col.rx = 6.f;
-    col.ry = 6.f;
+    col.rx = sprite.getSize().x / 2.f;
+    col.ry = sprite.getSize().x / 2.f;
     col.offset.y = -15.f;
 
     projectile.addComponent<CProjectile>();

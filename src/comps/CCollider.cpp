@@ -94,6 +94,13 @@ sf::ConvexShape makeConvexShape(const Polygon& p)
     return shape;
 }
 
+void CCollider::update(Context& ctx)
+{
+    if (!ctx.manager.resources.get<GameSettings>("settings")->showColliders)
+        return;
+    showBounds(ctx.window);
+}
+
 EllipseData makeEllipseData(const CEllipseCollider& e)
 {
     auto transform = e.gameObject.getComponent<CTransform>();

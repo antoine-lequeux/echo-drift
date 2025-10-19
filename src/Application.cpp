@@ -29,16 +29,18 @@ void Application::run()
 
 void Application::setup()
 {
-    resourceManager.add<sf::Texture>("player_blue_1", "assets/player/PlayerBlue_Frame_01_png_processed.png");
+    resourceManager.add<sf::Texture>("player_blue_1", "assets/player/player_blue_frame01.png");
 
-    resourceManager.add<sf::Texture>("background", "assets/backgrounds/PixelBackgroundSeamlessVertically.png");
+    resourceManager.add<sf::Texture>("background", "assets/backgrounds/background_vertical.png");
 
-    resourceManager.add<sf::Texture>("projectile", "assets/projectiles/Laser_Medium_png_processed.png");
+    resourceManager.add<sf::Texture>("projectile", "assets/projectiles/laser_medium.png");
 
-    resourceManager.add<sf::Texture>("asteroid1", "assets/asteroids/Asteroid 01_png_processed.png");
-    resourceManager.add<sf::Texture>("asteroid2", "assets/asteroids/Asteroid 02_png_processed.png");
-    resourceManager.add<sf::Texture>("asteroid3", "assets/asteroids/Asteroid 03_png_processed.png");
-    resourceManager.add<sf::Texture>("asteroid4", "assets/asteroids/Asteroid 04_png_processed.png");
+    resourceManager.add<sf::Texture>("asteroid1", "assets/asteroids/asteroid01.png");
+    resourceManager.add<sf::Texture>("asteroid2", "assets/asteroids/asteroid02.png");
+    resourceManager.add<sf::Texture>("asteroid3", "assets/asteroids/asteroid03.png");
+    resourceManager.add<sf::Texture>("asteroid4", "assets/asteroids/asteroid04.png");
+
+    resourceManager.add<GameSettings>("settings");
 
     auto& spaceShip = entityManager.spawn();
 
@@ -50,8 +52,9 @@ void Application::setup()
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();
 
-    auto& col = spaceShip.addComponent<CRectangleCollider>(Layer::Player);
-    col.halfSize = csprite.getSize() / 2.f;
+    auto& col = spaceShip.addComponent<CEllipseCollider>(Layer::Player);
+    col.rx = csprite.getSize().x / 2.5f;
+    col.ry = csprite.getSize().y / 2.f;
 
     auto& gameManager = entityManager.spawn();
     gameManager.addComponent<CGameManager>();

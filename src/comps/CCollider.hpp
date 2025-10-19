@@ -20,7 +20,7 @@ public:
     CCollider(GameObject& gameObject, Layer layer) : Component(gameObject), layer(layer) {}
     virtual ~CCollider() = default;
 
-    void update(Context& ctx) override { showBounds(ctx.window); }
+    void update(Context& ctx) override;
 
     void setLayer(Layer newLayer) { layer = newLayer; }
     Layer getLayer() const { return layer; }
