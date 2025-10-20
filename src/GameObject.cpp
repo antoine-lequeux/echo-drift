@@ -20,7 +20,6 @@ const GameObjects& GameObjectManager::getAll() const { return gameObjects; }
 
 void GameObjectManager::update(float dt, Input& input, sf::RenderWindow& window)
 {
-
     // Create a context for this update cycle.
     Context ctx{input, window, *this, dt};
 

@@ -1,10 +1,12 @@
 #include "Application.hpp"
+#include "Animation.hpp"
 #include "comps/CCollider.hpp"
 #include "comps/CGameManager.hpp"
 #include "comps/CSpaceShip.hpp"
 #include "comps/CSpeed.hpp"
 #include "comps/CSprite.hpp"
 #include "comps/CTransform.hpp"
+#include "comps/CAnimatedSprite.hpp"
 
 Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift"), entityManager(resourceManager)
 {
@@ -42,12 +44,25 @@ void Application::setup()
 
     resourceManager.add<GameSettings>("settings");
 
+    resourceManager.add<sf::Texture>("player_blue_anim_spritesheet", "assets/player/player_blue_anim.png");
+    std::vector<sf::IntRect> frames;
+    frames.push_back(sf::IntRect{{0, 0}, {64, 64}});
+    frames.push_back(sf::IntRect{{64, 0}, {64, 64}});
+    frames.push_back(sf::IntRect{{128, 0}, {64, 64}});
+
+    resourceManager.add<Animation>("player_blue_anim", resourceManager.get<sf::Texture>("player_blue_anim_spritesheet"),
+                                   frames, 0.2f, true);
+
     auto& spaceShip = entityManager.spawn();
 
     auto& ctransform = spaceShip.addComponent<CTransform>();
     ctransform.setPosition({0.f, 200.f});
 
-    auto& csprite = spaceShip.addComponent<CSprite>(resourceManager.get<sf::Texture>("player_blue_1"), 1);
+    // Add an animated sprite to the spaceship just to test the system.
+    auto& csprite = spaceShip.addComponent<CAnimatedSprite>();
+    csprite.setAnimation(resourceManager.get<Animation>("player_blue_anim"));
+    csprite.setDrawOrder(1);
+    csprite.play();
 
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();

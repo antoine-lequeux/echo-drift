@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../GameObject.hpp"
-#include "CSpaceShip.hpp"
 #include "CSprite.hpp"
 
 // Simple collision layers for different entity types.
