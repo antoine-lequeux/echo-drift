@@ -24,6 +24,9 @@ public:
     void setDrawOrder(int order) { drawOrder = order; }
     int getDrawOrder() const { return drawOrder; }
 
+    void setInversionX(bool state) { invertedX = state; }
+    void setInversionY(bool state) { invertedY = state; }
+
     sf::Vector2f getSize() const;
     sf::Vector2f getWorldSize() const;
 
@@ -35,4 +38,6 @@ protected:
     sf::IntRect textureRect;
     sf::Color color = sf::Color::White;
     int drawOrder;
+    bool invertedX = false;
+    bool invertedY = false;
 };

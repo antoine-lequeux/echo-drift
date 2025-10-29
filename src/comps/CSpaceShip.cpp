@@ -1,6 +1,7 @@
 #include "CSpaceShip.hpp"
 #include "CCollider.hpp"
 #include "CDespawner.hpp"
+#include "CMultiSprite.hpp"
 #include "CProjectile.hpp"
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
@@ -15,6 +16,10 @@ void CSpaceShip::update(Context& ctx)
 
     auto speedComp = gameObject.getComponent<CSpeed>();
     if (!speedComp)
+        return;
+
+    auto spriteComp = gameObject.getComponent<CMultiSprite>();
+    if (!spriteComp)
         return;
 
     sf::Vector2f direction{0.f, 0.f};
@@ -43,6 +48,15 @@ void CSpaceShip::update(Context& ctx)
         speedComp->setSpeed({0.f, 0.f});
         targetAngle = 0.f;
     }
+
+    if (abs(speedComp->getSpeed().x) > 0.7f * moveSpeed)
+        spriteComp->setCurrentSpriteIndex(2);
+    else if (abs(speedComp->getSpeed().x) > 0.2f * moveSpeed)
+        spriteComp->setCurrentSpriteIndex(1);
+    else
+        spriteComp->setCurrentSpriteIndex(0);
+
+    spriteComp->setInversionX(speedComp->getSpeed().x > 0.01f);
 
     timeSinceLastShot += ctx.dt;
     if (ctx.input.isActionTriggered(Action::Shoot) && timeSinceLastShot >= shootCooldown)

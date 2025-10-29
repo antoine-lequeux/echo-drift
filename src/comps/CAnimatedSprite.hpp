@@ -3,7 +3,7 @@
 #include "../Animation.hpp"
 #include "CSprite.hpp"
 
-// Component representing an animated sprite, keeping the same functionalities as a normal Sprite Component, 
+// Component representing an animated sprite, keeping the same functionalities as a normal Sprite Component,
 // but updating the texture using data from an Animation object.
 class CAnimatedSprite : public CSprite
 {
@@ -13,29 +13,53 @@ public:
 
     void update(Context& ctx) override
     {
-        if (!playing || !currentAnim)
+        if (!currentAnim)
             return;
 
-        elapsed += ctx.dt;
-
-        // Update the current texture rect if enough time has passed.
-        if (elapsed >= currentAnim->frameTime)
+        if (playing)
         {
-            elapsed -= currentAnim->frameTime;
-            currentFrame++;
+            elapsed += ctx.dt;
 
-            if (currentFrame >= currentAnim->frames.size())
+            // Update the current texture rect if enough time has passed.
+            if (elapsed >= currentAnim->frameTime)
             {
-                if (currentAnim->loop)
-                    currentFrame = 0;
+                elapsed -= currentAnim->frameTime;
+
+                if (!backward)
+                {
+                    // Update forward.
+                    currentFrame++;
+
+                    if (currentFrame >= currentAnim->frames.size())
+                    {
+                        if (currentAnim->loop)
+                            currentFrame = 0;
+                        else
+                        {
+                            playing = false;
+                            return;
+                        }
+                    }
+                }
                 else
                 {
-                    playing = false;
-                    return;
-                }
-            }
+                    // Update backward.
+                    currentFrame--;
 
-            setTextureRect(currentAnim->frames[currentFrame]);
+                    if (currentFrame < 0)
+                    {
+                        if (currentAnim->loop)
+                            currentFrame = currentAnim->frames.size() - 1;
+                        else
+                        {
+                            playing = false;
+                            return;
+                        }
+                    }
+                }
+
+                setTextureRect(currentAnim->frames[currentFrame]);
+            }
         }
 
         // Use the same render method as in CSprite.
@@ -54,6 +78,9 @@ public:
     }
 
     void setState(bool isPlaying) { playing = isPlaying; }
+    void setBackward(bool isBackward) { backward = isBackward; }
+
+    std::size_t getCurrentFrame() const { return currentFrame; }
 
 private:
 
@@ -61,4 +88,5 @@ private:
     std::size_t currentFrame = 0;
     float elapsed = 0.f;
     bool playing = false;
+    bool backward = false;
 };

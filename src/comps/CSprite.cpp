@@ -73,7 +73,8 @@ void CSprite::render(sf::RenderWindow& window)
     // Apply transform data.
     sprite.setPosition(transform->getGlobalPosition());
     sprite.setRotation(sf::degrees(transform->getDisplayRotation()));
-    sprite.setScale(transform->getGlobalScale());
+    sprite.setScale({transform->getGlobalScale().x * (invertedX ? -1.f : 1.f),
+                     transform->getGlobalScale().y * (invertedY ? -1.f : 1.f)});
 
     // Center origin.
     sf::FloatRect bounds = sprite.getLocalBounds();

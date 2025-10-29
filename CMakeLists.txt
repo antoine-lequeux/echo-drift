@@ -37,5 +37,6 @@ add_executable(echo-drift
     src/ResourceManager.hpp
     src/Animation.hpp
     src/comps/CAnimatedSprite.hpp
+    src/comps/CMultiSprite.hpp
 )
 target_link_libraries(echo-drift PRIVATE sfml-graphics sfml-window sfml-system)
