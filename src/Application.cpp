@@ -23,7 +23,7 @@ void Application::run()
     sf::Clock clock;
     while (window.isOpen())
     {
-        float dt = clock.restart().asSeconds();
+        f32 dt = clock.restart().asSeconds();
         processEvents();
         update(dt);
         input.clear();
@@ -32,27 +32,29 @@ void Application::run()
 
 void Application::setup()
 {
-    resourceManager.add<sf::Texture>("player_blue_1", "assets/player/player_blue_frame01.png");
+    resourceManager.add<sf::Texture>(ResourceID::PlayerBlue1, "assets/player/player_blue_frame01.png");
 
-    resourceManager.add<sf::Texture>("background", "assets/backgrounds/background_vertical.png");
+    resourceManager.add<sf::Texture>(ResourceID::Background, "assets/backgrounds/background_vertical.png");
 
-    resourceManager.add<sf::Texture>("projectile", "assets/projectiles/laser_medium.png");
+    resourceManager.add<sf::Texture>(ResourceID::Projectile, "assets/projectiles/laser_medium.png");
 
-    resourceManager.add<sf::Texture>("asteroid1", "assets/asteroids/asteroid01.png");
-    resourceManager.add<sf::Texture>("asteroid2", "assets/asteroids/asteroid02.png");
-    resourceManager.add<sf::Texture>("asteroid3", "assets/asteroids/asteroid03.png");
-    resourceManager.add<sf::Texture>("asteroid4", "assets/asteroids/asteroid04.png");
+    resourceManager.add<sf::Texture>(ResourceID::Asteroid1, "assets/asteroids/asteroid01.png");
+    resourceManager.add<sf::Texture>(ResourceID::Asteroid2, "assets/asteroids/asteroid02.png");
+    resourceManager.add<sf::Texture>(ResourceID::Asteroid3, "assets/asteroids/asteroid03.png");
+    resourceManager.add<sf::Texture>(ResourceID::Asteroid4, "assets/asteroids/asteroid04.png");
 
-    resourceManager.add<GameSettings>("settings");
+    resourceManager.add<GameSettings>(ResourceID::Settings);
 
-    resourceManager.add<sf::Texture>("player_blue_anim_spritesheet", "assets/player/player_blue_anim.png");
-    std::vector<sf::IntRect> frames;
-    frames.push_back(sf::IntRect{{0, 0}, {64, 64}});
-    frames.push_back(sf::IntRect{{64, 0}, {64, 64}});
-    frames.push_back(sf::IntRect{{128, 0}, {64, 64}});
+    resourceManager.add<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet, "assets/player/player_blue_anim.png");
+    std::vector<sf::IntRect> frames = {
+        {{0, 0}, {64, 64}},
+        {{64, 0}, {64, 64}},
+        {{128, 0}, {64, 64}},
+    };
 
-    resourceManager.add<Animation>("player_blue_anim", resourceManager.get<sf::Texture>("player_blue_anim_spritesheet"),
-                                   frames, 0.2f, true);
+    resourceManager.add<Animation>(ResourceID::PlayerBlueAnim,
+                                   resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), frames,
+                                   0.2f, true);
 
     auto& spaceShip = entityManager.spawn();
 
@@ -61,12 +63,12 @@ void Application::setup()
 
     // Add an animated sprite to the spaceship just to test the system.
     // auto& csprite = spaceShip.addComponent<CAnimatedSprite>();
-    // csprite.setAnimation(resourceManager.get<Animation>("player_blue_anim"));
+    // csprite.setAnimation(resourceManager.get<Animation>(ResourceID::PlayerBlueAnim));
     // csprite.setDrawOrder(1);
     // csprite.play();
 
-    auto& csprite =
-        spaceShip.addComponent<CMultiSprite>(resourceManager.get<sf::Texture>("player_blue_anim_spritesheet"), 3, 1);
+    auto& csprite = spaceShip.addComponent<CMultiSprite>(
+        resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), 3, 1);
 
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();
@@ -81,7 +83,7 @@ void Application::setup()
     auto& background = entityManager.spawn();
     auto& transform1 = background.addComponent<CTransform>();
     transform1.setScale({4.f, 4.f});
-    background.addComponent<CSprite>(resourceManager.get<sf::Texture>("background"), -10);
+    background.addComponent<CSprite>(resourceManager.get<sf::Texture>(ResourceID::Background), -10);
 }
 
 void Application::processEvents()
@@ -94,7 +96,7 @@ void Application::processEvents()
     }
 }
 
-void Application::update(float dt)
+void Application::update(f32 dt)
 {
     window.clear(sf::Color::Black);
     entityManager.update(dt, input, window);

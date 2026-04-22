@@ -2,5 +2,5 @@
 
 struct GameSettings
 {
-    bool showColliders;
+    bool showColliders = false;
 };

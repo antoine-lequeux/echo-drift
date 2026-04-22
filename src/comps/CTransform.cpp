@@ -6,11 +6,11 @@ void CTransform::setPosition(sf::Vector2f pos) { position = pos; }
 sf::Vector2f CTransform::getLocalPosition() const { return position; }
 void CTransform::move(sf::Vector2f offset) { position += offset; }
 
-void CTransform::setRotation(float angle) { trueRotation = angle; }
-float CTransform::getLocalRotation() const { return trueRotation; }
+void CTransform::setRotation(f32 angle) { trueRotation = angle; }
+f32 CTransform::getLocalRotation() const { return trueRotation; }
 
-void CTransform::setRotationQuantization(float step) { rotationStep = step; }
-float CTransform::getRotationQuantization() const { return rotationStep; }
+void CTransform::setRotationQuantization(f32 step) { rotationStep = step; }
+f32 CTransform::getRotationQuantization() const { return rotationStep; }
 
 void CTransform::setScale(sf::Vector2f factors) { scale = factors; }
 sf::Vector2f CTransform::getLocalScale() const { return scale; }
@@ -38,7 +38,7 @@ sf::Vector2f CTransform::getGlobalPosition() const
     return t.transformPoint(position);
 }
 
-float CTransform::getGlobalRotation() const
+f32 CTransform::getGlobalRotation() const
 {
     const CTransform* parentTransform = getParentTransform();
     if (!parentTransform)
@@ -46,7 +46,7 @@ float CTransform::getGlobalRotation() const
     return trueRotation + parentTransform->getGlobalRotation();
 }
 
-float CTransform::getDisplayRotation() const { return quantizeRotation(getGlobalRotation()); }
+f32 CTransform::getDisplayRotation() const { return quantizeRotation(getGlobalRotation()); }
 
 sf::Vector2f CTransform::getGlobalScale() const
 {
@@ -61,8 +61,8 @@ sf::Vector2f CTransform::getGlobalScale() const
 sf::Vector2f CTransform::getGlobalPoint(sf::Vector2f localPoint) const
 {
     sf::Transform t;
-    t.translate(position);
-    t.rotate(sf::degrees(getDisplayRotation()));
-    t.scale(scale);
+    t.translate(getGlobalPosition());
+    t.rotate(sf::degrees(getGlobalRotation()));
+    t.scale(getGlobalScale());
     return t.transformPoint(localPoint);
 }

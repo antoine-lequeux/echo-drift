@@ -2,7 +2,7 @@
 
 CSprite::CSprite(GameObject& gameObject) : Component(gameObject) {}
 
-CSprite::CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, int drawOrder)
+CSprite::CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, i32 drawOrder)
     : Component(gameObject), texture(tex), drawOrder(drawOrder)
 {
     textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture->getSize());
@@ -11,74 +11,101 @@ CSprite::CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, int d
 
 void CSprite::update(Context& ctx) { render(ctx.window); }
 
-void CSprite::setTexture(std::shared_ptr<sf::Texture> tex) { texture = tex; }
+void CSprite::setTexture(std::shared_ptr<sf::Texture> tex)
+{
+    texture = tex;
+    markDirty();
+}
 
-void CSprite::setTextureRect(sf::IntRect rect) { textureRect = rect; }
+void CSprite::setTextureRect(sf::IntRect rect)
+{
+    textureRect = rect;
+    markDirty();
+}
 
 sf::IntRect CSprite::getTextureRect() const { return textureRect; }
 
-void CSprite::setColor(const sf::Color& col) { color = col; }
+void CSprite::setColor(const sf::Color& col)
+{
+    color = col;
+    markDirty();
+}
 
 sf::Color CSprite::getColor() const { return color; }
 
+void CSprite::setInversionX(bool state)
+{
+    if (invertedX != state)
+    {
+        invertedX = state;
+        markDirty();
+    }
+}
+
+void CSprite::setInversionY(bool state)
+{
+    if (invertedY != state)
+    {
+        invertedY = state;
+        markDirty();
+    }
+}
+
 sf::Vector2f CSprite::getSize() const
 {
-    sf::Vector2f baseSize;
+    if (!texture)
+        return {0.f, 0.f};
 
-    // If no texture rect was specified...
     if (textureRect.size.x == 0 || textureRect.size.y == 0)
-    {
-        // ...we use the base texture size...
-        baseSize.x = static_cast<float>(texture->getSize().x);
-        baseSize.y = static_cast<float>(texture->getSize().y);
-    }
-    else
-    {
-        // ...else we use the size of the texture rect.
-        baseSize.x = static_cast<float>(textureRect.size.x);
-        baseSize.y = static_cast<float>(textureRect.size.y);
-    }
+        return {static_cast<f32>(texture->getSize().x), static_cast<f32>(texture->getSize().y)};
 
-    return baseSize;
+    return {static_cast<f32>(textureRect.size.x), static_cast<f32>(textureRect.size.y)};
 }
 
 sf::Vector2f CSprite::getWorldSize() const
 {
-    // Get the base size.
     sf::Vector2f size = getSize();
-
-    // Get the transform data.
-    auto transform = gameObject.getComponent<CTransform>();
+    auto* transform = gameObject.getComponent<CTransform>();
     if (transform)
     {
-        // Apply the scale.
         sf::Vector2f scale = transform->getGlobalScale();
         size.x *= scale.x;
         size.y *= scale.y;
     }
-
     return size;
+}
+
+void CSprite::rebuildSprite()
+{
+    if (!texture)
+        return;
+    cachedSprite.emplace(*texture);
+    cachedSprite->setTextureRect(textureRect);
+    cachedSprite->setColor(color);
+    sf::FloatRect bounds = cachedSprite->getLocalBounds();
+    cachedSprite->setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    spriteDirty = false;
 }
 
 void CSprite::render(sf::RenderWindow& window)
 {
-    auto transform = gameObject.getComponent<CTransform>();
+    if (!texture)
+        return;
+
+    auto* transform = gameObject.getComponent<CTransform>();
     if (!transform)
         return;
 
-    sf::Sprite sprite(*texture);
-    sprite.setTextureRect(textureRect);
-    sprite.setColor(color);
+    if (spriteDirty)
+        rebuildSprite();
 
-    // Apply transform data.
-    sprite.setPosition(transform->getGlobalPosition());
-    sprite.setRotation(sf::degrees(transform->getDisplayRotation()));
-    sprite.setScale({transform->getGlobalScale().x * (invertedX ? -1.f : 1.f),
-                     transform->getGlobalScale().y * (invertedY ? -1.f : 1.f)});
+    if (!cachedSprite)
+        return;
 
-    // Center origin.
-    sf::FloatRect bounds = sprite.getLocalBounds();
-    sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    cachedSprite->setPosition(transform->getGlobalPosition());
+    cachedSprite->setRotation(sf::degrees(transform->getDisplayRotation()));
+    cachedSprite->setScale({transform->getGlobalScale().x * (invertedX ? -1.f : 1.f),
+                            transform->getGlobalScale().y * (invertedY ? -1.f : 1.f)});
 
-    window.draw(sprite);
+    window.draw(*cachedSprite);
 }

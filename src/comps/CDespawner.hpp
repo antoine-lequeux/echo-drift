@@ -22,7 +22,7 @@ public:
         sf::Vector2f viewCenter = view.getCenter();
 
         // Calculate a maximum distance based on the view size.
-        float maxDistance = std::max(view.getSize().x, view.getSize().y) * 0.6f;
+        f32 maxDistance = std::max(view.getSize().x, view.getSize().y) * 0.6f;
 
         // Despawn if the entity is too far from the view center.
         if (std::hypot(position.x - viewCenter.x, position.y - viewCenter.y) > maxDistance)

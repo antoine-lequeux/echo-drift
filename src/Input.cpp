@@ -2,12 +2,11 @@
 
 void Input::handleEvent(const sf::Event& event)
 {
-    if (event.is<sf::Event::KeyPressed>())
+    if (auto* e = event.getIf<sf::Event::KeyPressed>())
     {
-        auto code = event.getIf<sf::Event::KeyPressed>()->code;
         for (auto& [action, key] : m_keyBindings)
         {
-            if (code == key)
+            if (e->code == key)
             {
                 if (!m_actionActive[action])
                     m_actionTriggered[action] = true;
@@ -15,13 +14,11 @@ void Input::handleEvent(const sf::Event& event)
             }
         }
     }
-
-    if (event.is<sf::Event::KeyReleased>())
+    else if (auto* e = event.getIf<sf::Event::KeyReleased>())
     {
-        auto code = event.getIf<sf::Event::KeyReleased>()->code;
         for (auto& [action, key] : m_keyBindings)
         {
-            if (code == key)
+            if (e->code == key)
             {
                 m_actionActive[action] = false;
                 m_actionTriggered[action] = false;

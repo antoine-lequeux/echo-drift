@@ -1,83 +1,60 @@
 #include "CCollider.hpp"
 
-Polygon ellipseToPolygon(EllipseData& e, unsigned int n)
+namespace
 {
-    Polygon p;
-    for (unsigned int i = 0; i < n; ++i)
+
+sf::Vector2f rotatePoint(const sf::Vector2f& p, const sf::Vector2f& center, f32 angleDeg)
+{
+    f32 angleRad = angleDeg * PI / 180.f;
+    f32 s = std::sin(angleRad);
+    f32 c = std::cos(angleRad);
+    sf::Vector2f t = p - center;
+    return {t.x * c - t.y * s + center.x, t.x * s + t.y * c + center.y};
+}
+
+bool overlapOnAxis(const Polygon& a, const Polygon& b, const sf::Vector2f& axis)
+{
+    f32 minA = a[0].x * axis.x + a[0].y * axis.y;
+    f32 maxA = minA;
+    for (auto& p : a)
     {
-        float angle = i * 2 * M_PI / n;
-        float x = e.x + e.rx * std::cos(angle);
-        float y = e.y + e.ry * std::sin(angle);
-        p.push_back(sf::Vector2f({x, y}));
+        f32 proj = p.x * axis.x + p.y * axis.y;
+        minA = std::min(minA, proj);
+        maxA = std::max(maxA, proj);
     }
-    if (e.rotation != 0.f)
-        for (auto& pt : p)
-            pt = rotatePoint(pt, {e.x, e.y}, e.rotation);
-    return p;
-}
-
-Polygon rectangleToPolygon(RectangleData& r)
-{
-    Polygon p;
-    p.push_back(sf::Vector2f{r.x - r.w, r.y - r.h});
-    p.push_back(sf::Vector2f{r.x + r.w, r.y - r.h});
-    p.push_back(sf::Vector2f{r.x + r.w, r.y + r.h});
-    p.push_back(sf::Vector2f{r.x - r.w, r.y + r.h});
-    if (r.rotation != 0.f)
-        for (auto& pt : p)
-            pt = rotatePoint(pt, {r.x, r.y}, r.rotation);
-    return p;
-}
-
-bool overlapOnAxis(const Polygon& shapeA, const Polygon& shapeB, const sf::Vector2f& axis)
-{
-    auto project = [&](const Polygon& shape)
+    f32 minB = b[0].x * axis.x + b[0].y * axis.y;
+    f32 maxB = minB;
+    for (auto& p : b)
     {
-        float min = (shape[0].x * axis.x + shape[0].y * axis.y);
-        float max = min;
-        for (auto& p : shape)
-        {
-            float proj = p.x * axis.x + p.y * axis.y;
-            if (proj < min)
-                min = proj;
-            if (proj > max)
-                max = proj;
-        }
-        return std::pair<float, float>(min, max);
-    };
-
-    auto [minA, maxA] = project(shapeA);
-    auto [minB, maxB] = project(shapeB);
-
+        f32 proj = p.x * axis.x + p.y * axis.y;
+        minB = std::min(minB, proj);
+        maxB = std::max(maxB, proj);
+    }
     return !(maxA < minB || maxB < minA);
 }
 
 bool polygonsCollide(const Polygon& a, const Polygon& b)
 {
-    auto addAxes = [](const Polygon& shape, std::vector<sf::Vector2f>& axes)
+    std::vector<sf::Vector2f> axes;
+    axes.reserve(a.size() + b.size());
+
+    auto addAxes = [&axes](const Polygon& shape)
     {
         for (size_t i = 0; i < shape.size(); ++i)
         {
-            sf::Vector2f p1 = shape[i];
-            sf::Vector2f p2 = shape[(i + 1) % shape.size()];
-            sf::Vector2f edge = p2 - p1;
+            sf::Vector2f edge = shape[(i + 1) % shape.size()] - shape[i];
             sf::Vector2f normal(-edge.y, edge.x);
-            float len = std::sqrt(normal.x * normal.x + normal.y * normal.y);
-            normal /= len;
-            axes.push_back(normal);
+            axes.push_back(normal / std::sqrt(normal.x * normal.x + normal.y * normal.y));
         }
     };
 
-    std::vector<sf::Vector2f> axes;
-    addAxes(a, axes);
-    addAxes(b, axes);
+    addAxes(a);
+    addAxes(b);
 
     for (auto& axis : axes)
-    {
         if (!overlapOnAxis(a, b, axis))
-            // Found a separating axis.
             return false;
-    }
+
     return true;
 }
 
@@ -87,107 +64,94 @@ sf::ConvexShape makeConvexShape(const Polygon& p)
     shape.setPointCount(p.size());
     for (size_t i = 0; i < p.size(); ++i)
         shape.setPoint(i, p[i]);
-
     shape.setFillColor(sf::Color::Transparent);
     shape.setOutlineColor(sf::Color::Green);
     shape.setOutlineThickness(1.f);
     return shape;
 }
 
+} // namespace
+
 void CCollider::update(Context& ctx)
 {
-    if (!ctx.manager.resources.get<GameSettings>("settings")->showColliders)
+    rebuildPolygon();
+    if (ctx.manager.resources.get<GameSettings>(ResourceID::Settings)->showColliders)
+        showBounds(ctx.window);
+}
+
+bool CCollider::isTouching(const CCollider& other) const
+{
+    if (cachedPolygon.empty() || other.cachedPolygon.empty())
+        return false;
+    return polygonsCollide(cachedPolygon, other.cachedPolygon);
+}
+
+void CEllipseCollider::rebuildPolygon()
+{
+    auto* transform = gameObject.getComponent<CTransform>();
+    if (!transform)
+    {
+        cachedPolygon.clear();
         return;
-    showBounds(ctx.window);
-}
+    }
 
-EllipseData makeEllipseData(const CEllipseCollider& e)
-{
-    auto transform = e.gameObject.getComponent<CTransform>();
-    if (!transform)
-        return EllipseData();
-    EllipseData data;
+    constexpr u32 N = 32;
+    cachedPolygon.resize(N);
+
     sf::Vector2f s = transform->getGlobalScale();
-    data.x = e.offset.x + transform->getGlobalPosition().x;
-    data.y = e.offset.y + transform->getGlobalPosition().y;
-    data.rx = e.rx * s.x;
-    data.ry = e.ry * s.y;
-    data.rotation = transform->getDisplayRotation();
-    return data;
-}
+    f32 cx = offset.x + transform->getGlobalPosition().x;
+    f32 cy = offset.y + transform->getGlobalPosition().y;
+    f32 scaledRx = rx * s.x;
+    f32 scaledRy = ry * s.y;
+    f32 rot = transform->getDisplayRotation();
 
-RectangleData makeRectangleData(const CRectangleCollider& r)
-{
-    auto transform = r.gameObject.getComponent<CTransform>();
-    if (!transform)
-        return RectangleData();
-    RectangleData data;
-    sf::Vector2f s = transform->getGlobalScale();
-    data.x = r.offset.x + transform->getGlobalPosition().x;
-    data.y = r.offset.y + transform->getGlobalPosition().y;
-    data.w = r.halfSize.x * s.x;
-    data.h = r.halfSize.y * s.y;
-    data.rotation = transform->getDisplayRotation();
-    return data;
-}
+    for (u32 i = 0; i < N; ++i)
+    {
+        f32 angle = i * 2.f * PI / N;
+        cachedPolygon[i] = {cx + scaledRx * std::cos(angle), cy + scaledRy * std::sin(angle)};
+    }
 
-sf::Vector2f rotatePoint(const sf::Vector2f& p, const sf::Vector2f& center, float angleDeg)
-{
-    float angleRad = angleDeg * (std::numbers::pi / 180.f);
-    float s = std::sin(angleRad);
-    float c = std::cos(angleRad);
-
-    sf::Vector2f translated = p - center;
-    sf::Vector2f rotated(translated.x * c - translated.y * s, translated.x * s + translated.y * c);
-    return rotated + center;
+    if (rot != 0.f)
+        for (auto& pt : cachedPolygon)
+            pt = rotatePoint(pt, {cx, cy}, rot);
 }
 
 void CEllipseCollider::showBounds(sf::RenderWindow& window) const
 {
-    EllipseData data = makeEllipseData(*this);
-    sf::ConvexShape shape = makeConvexShape(ellipseToPolygon(data));
-    window.draw(shape);
+    if (!cachedPolygon.empty())
+        window.draw(makeConvexShape(cachedPolygon));
 }
 
-bool CEllipseCollider::isTouching(const CCollider& other) const { return other.isTouchingWith(*this); }
-
-bool CEllipseCollider::isTouchingWith(const CEllipseCollider& other) const
+void CRectangleCollider::rebuildPolygon()
 {
-    EllipseData data1 = makeEllipseData(*this);
-    EllipseData data2 = makeEllipseData(other);
+    auto* transform = gameObject.getComponent<CTransform>();
+    if (!transform)
+    {
+        cachedPolygon.clear();
+        return;
+    }
 
-    return polygonsCollide(ellipseToPolygon(data1), ellipseToPolygon(data2));
-}
+    cachedPolygon.resize(4);
 
-bool CEllipseCollider::isTouchingWith(const CRectangleCollider& other) const
-{
-    EllipseData data1 = makeEllipseData(*this);
-    RectangleData data2 = makeRectangleData(other);
+    sf::Vector2f s = transform->getGlobalScale();
+    f32 cx = offset.x + transform->getGlobalPosition().x;
+    f32 cy = offset.y + transform->getGlobalPosition().y;
+    f32 hw = halfSize.x * s.x;
+    f32 hh = halfSize.y * s.y;
+    f32 rot = transform->getDisplayRotation();
 
-    return polygonsCollide(ellipseToPolygon(data1), rectangleToPolygon(data2));
+    cachedPolygon[0] = {cx - hw, cy - hh};
+    cachedPolygon[1] = {cx + hw, cy - hh};
+    cachedPolygon[2] = {cx + hw, cy + hh};
+    cachedPolygon[3] = {cx - hw, cy + hh};
+
+    if (rot != 0.f)
+        for (auto& pt : cachedPolygon)
+            pt = rotatePoint(pt, {cx, cy}, rot);
 }
 
 void CRectangleCollider::showBounds(sf::RenderWindow& window) const
 {
-    RectangleData data = makeRectangleData(*this);
-    sf::ConvexShape shape = makeConvexShape(rectangleToPolygon(data));
-    window.draw(shape);
-}
-
-bool CRectangleCollider::isTouching(const CCollider& other) const { return other.isTouchingWith(*this); }
-
-bool CRectangleCollider::isTouchingWith(const CEllipseCollider& other) const
-{
-    EllipseData data1 = makeEllipseData(other);
-    RectangleData data2 = makeRectangleData(*this);
-
-    return polygonsCollide(ellipseToPolygon(data1), rectangleToPolygon(data2));
-}
-
-bool CRectangleCollider::isTouchingWith(const CRectangleCollider& other) const
-{
-    RectangleData data1 = makeRectangleData(*this);
-    RectangleData data2 = makeRectangleData(other);
-
-    return polygonsCollide(rectangleToPolygon(data1), rectangleToPolygon(data2));
+    if (!cachedPolygon.empty())
+        window.draw(makeConvexShape(cachedPolygon));
 }

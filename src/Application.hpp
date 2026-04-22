@@ -22,7 +22,7 @@ private:
     void processEvents();
 
     // Update game state.
-    void update(float dt);
+    void update(f32 dt);
 
     sf::RenderWindow window;
     Input input;

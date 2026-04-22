@@ -16,17 +16,17 @@ private:
     void shootProjectile(Context& ctx);
 
     // Movement speed in pixels per second.
-    float moveSpeed = 400.f;
+    f32 moveSpeed = 400.f;
 
     // Maximum rotation speed in degrees per second.
-    float rotationSpeed = 120.f;
+    f32 rotationSpeed = 120.f;
 
     // Maximum tilt angle when moving sideways.
-    float maxTiltAngle = 25.f;
+    f32 maxTiltAngle = 25.f;
 
-    float targetAngle = 0.f;
+    f32 targetAngle = 0.f;
 
     // Seconds between shots.
-    float shootCooldown = 0.15f;
-    float timeSinceLastShot = 0.f;
+    f32 shootCooldown = 0.15f;
+    f32 timeSinceLastShot = 0.f;
 };

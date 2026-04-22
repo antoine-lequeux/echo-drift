@@ -46,7 +46,7 @@ public:
                     // Update backward.
                     currentFrame--;
 
-                    if (currentFrame < 0)
+                    if (currentFrame == SIZE_MAX)
                     {
                         if (currentAnim->loop)
                             currentFrame = currentAnim->frames.size() - 1;
@@ -80,13 +80,13 @@ public:
     void setState(bool isPlaying) { playing = isPlaying; }
     void setBackward(bool isBackward) { backward = isBackward; }
 
-    std::size_t getCurrentFrame() const { return currentFrame; }
+    usize getCurrentFrame() const { return currentFrame; }
 
 private:
 
     std::shared_ptr<Animation> currentAnim;
-    std::size_t currentFrame = 0;
-    float elapsed = 0.f;
+    usize currentFrame = 0;
+    f32 elapsed = 0.f;
     bool playing = false;
     bool backward = false;
 };

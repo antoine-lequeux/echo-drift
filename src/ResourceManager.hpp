@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Resources.hpp"
+
 #include <any>
 #include <memory>
 #include <stdexcept>
@@ -13,45 +15,36 @@ class ResourceManager
 {
 public:
 
-    // Add a resource of T type to the manager, using the arguments to create a shared_ptr.
-    // The id is a string that can be used to later retrieve the resource.
+    // Add a resource of type T identified by a ResourceID.
     template <typename T, typename... Args>
-    T& add(const std::string& id, Args&&... args)
+    T& add(ResourceID id, Args&&... args)
     {
-        auto& map = getMap<T>();
         auto obj = std::make_shared<T>(std::forward<Args>(args)...);
-        map[id] = obj;
+        getMap<T>()[id] = obj;
         return *obj;
     }
 
-    // Use the id of a stored resource to return the shared_ptr pointing to it.
+    // Retrieve a stored resource by its ResourceID.
     template <typename T>
-    std::shared_ptr<T> get(const std::string& id)
+    std::shared_ptr<T> get(ResourceID id)
     {
         auto& map = getMap<T>();
         if (auto it = map.find(id); it != map.end())
             return it->second;
-        throw std::runtime_error("Resource not found: " + id);
+        throw std::runtime_error("Resource not found: id=" + std::to_string(static_cast<i32>(id)));
     }
 
 private:
 
-    // "resources" maps each resource type (via std::type_index) to its corresponding resource map.
-    // Each resource map stores pairs of (string -> std::shared_ptr<T>).
-    // std::any is used to hold maps of different types in a single container.
+    // Maps each resource type (via std::type_index) to its own id->resource map.
     std::unordered_map<std::type_index, std::any> resources;
 
-    // Get the map corresponding to the right resource type.
+    // Returns (or inserts) the inner map for resource type T.
     template <typename T>
-    std::unordered_map<std::string, std::shared_ptr<T>>& getMap()
+    std::unordered_map<ResourceID, std::shared_ptr<T>>& getMap()
     {
         auto type = std::type_index(typeid(T));
-
-        // Add a new map if it does not exist yet.
-        if (!resources.contains(type))
-            resources[type] = std::unordered_map<std::string, std::shared_ptr<T>>{};
-
-        // Return the existing map.
-        return std::any_cast<std::unordered_map<std::string, std::shared_ptr<T>>&>(resources[type]);
+        auto it = resources.try_emplace(type, std::unordered_map<ResourceID, std::shared_ptr<T>>{}).first;
+        return std::any_cast<std::unordered_map<ResourceID, std::shared_ptr<T>>&>(it->second);
     }
 };

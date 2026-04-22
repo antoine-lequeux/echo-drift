@@ -4,11 +4,13 @@
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
 
+#include <array>
+
 void CGameManager::update(Context& ctx)
 {
     if (ctx.input.isActionTriggered(Action::Debug))
     {
-        auto settings = ctx.manager.resources.get<GameSettings>("settings");
+        auto settings = ctx.manager.resources.get<GameSettings>(ResourceID::Settings);
         settings->showColliders = !settings->showColliders;
     }
 
@@ -18,8 +20,8 @@ void CGameManager::update(Context& ctx)
         spawnTimer -= spawnInterval;
 
         // Random position within window bounds.
-        float x = Tools::getRandom(-540.f, 540.f);
-        float y = -400.f;
+        f32 x = Tools::getRandom(-540.f, 540.f);
+        f32 y = -400.f;
         sf::Vector2f position = {x, y};
 
         // Random downward speed.
@@ -32,18 +34,18 @@ void CGameManager::update(Context& ctx)
         transform.setPosition(position);
         transform.setRotation(Tools::getRandom(0.f, 360.f));
 
-        static std::string types[4] = {"asteroid1", "asteroid2", "asteroid3", "asteroid4"};
+        static constexpr std::array<ResourceID, 4> asteroidTypes = {ResourceID::Asteroid1, ResourceID::Asteroid2,
+                                                                    ResourceID::Asteroid3, ResourceID::Asteroid4};
 
         // Create a Sprite component with an asteroid texture chosen randomly among four.
-        auto& sprite =
-            asteroid.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(types[Tools::getRandom(0, 3)]), 5);
+        auto& sprite = asteroid.addComponent<CSprite>(
+            ctx.manager.resources.get<sf::Texture>(asteroidTypes[Tools::getRandom(0, 3)]), 5);
 
         auto& col = asteroid.addComponent<CEllipseCollider>(Layer::Asteroid);
         col.rx = sprite.getWorldSize().x / 2.f;
         col.ry = sprite.getWorldSize().x / 2.f;
 
         auto& speedComp = asteroid.addComponent<CSpeed>(speed);
-        speedComp.setSpeed(speed);
 
         asteroid.addComponent<CDespawner>();
     }

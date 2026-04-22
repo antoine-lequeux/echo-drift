@@ -40,7 +40,7 @@ void CSpaceShip::update(Context& ctx)
         speedComp->setSpeed(speed);
 
         // Calculate target angle based on horizontal movement.
-        float horizontalFactor = direction.normalized().x;
+        f32 horizontalFactor = direction.normalized().x;
         targetAngle = horizontalFactor * maxTiltAngle;
     }
     else
@@ -63,46 +63,24 @@ void CSpaceShip::update(Context& ctx)
         shootProjectile(ctx);
 
     // Smoothly interpolate the rotation towards the target angle.
-    float currentAngle = transform->getLocalRotation();
-    float angleDiff = targetAngle - currentAngle;
+    f32 currentAngle = transform->getLocalRotation();
+    f32 angleDiff = targetAngle - currentAngle;
 
     // Normalize angle difference to [-180, 180] range.
-    while (angleDiff > 180.f)
-        angleDiff -= 360.f;
-    while (angleDiff < -180.f)
-        angleDiff += 360.f;
+    angleDiff = std::fmod(angleDiff + 180.f, 360.f) - 180.f;
 
     // Calculate smooth rotation with easing.
-    float rotationAmount = rotationSpeed * ctx.dt;
+    f32 rotationAmount = rotationSpeed * ctx.dt;
     if (std::abs(angleDiff) > 0.1f)
     {
         // Use sine easing for smooth acceleration and deceleration.
-        float easeFactor = std::sin(std::min(std::abs(angleDiff) / maxTiltAngle, 1.f) * 3.14159f / 2.f);
-        float angleChange = std::clamp(angleDiff, -rotationAmount, rotationAmount) * easeFactor;
+        f32 easeFactor = std::sin(std::min(std::abs(angleDiff) / maxTiltAngle, 1.f) * PI / 2.f);
+        f32 angleChange = std::clamp(angleDiff, -rotationAmount, rotationAmount) * easeFactor;
         transform->setRotation(currentAngle + angleChange);
     }
     else
     {
         transform->setRotation(targetAngle);
-    }
-
-    // Check for collisions with asteroids and destroy both on hit.
-    auto thisCollider = gameObject.getComponent<CCollider>();
-    for (auto& obj : ctx.manager.getAll())
-    {
-        if (obj.get() == &gameObject)
-            continue;
-
-        auto otherCollider = obj->getComponent<CCollider>();
-        if (otherCollider && thisCollider && thisCollider->isTouching(*otherCollider))
-        {
-            if (otherCollider->getLayer() == Layer::Asteroid && thisCollider->getLayer() == Layer::Player)
-            {
-                std::cout << "Player hit by asteroid!\n";
-                gameObject.destroy();
-                obj->destroy();
-            }
-        }
     }
 }
 
@@ -132,7 +110,7 @@ void CSpaceShip::shootProjectile(Context& ctx)
     transform.setPosition(shipFront + shipSpeed->getSpeed() * ctx.dt * 3.f);
     transform.setRotation(shipTransform->getLocalRotation());
 
-    auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>("projectile"), 6);
+    auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(ResourceID::Projectile), 6);
 
     sf::Vector2f speedDirection = shipFront - shipTransform->getGlobalPosition();
     sf::Vector2f speed = speedDirection.normalized() * 800.f;
@@ -142,8 +120,8 @@ void CSpaceShip::shootProjectile(Context& ctx)
     projectile.addComponent<CDespawner>();
 
     auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
-    col.rx = sprite.getSize().x / 2.f;
-    col.ry = sprite.getSize().x / 2.f;
+    col.rx = sprite.getSize().x;
+    col.ry = sprite.getSize().x;
     col.offset.y = -15.f;
 
     projectile.addComponent<CProjectile>();

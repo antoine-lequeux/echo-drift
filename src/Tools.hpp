@@ -3,6 +3,8 @@
 #include <random>
 #include <type_traits>
 
+#include "Defines.hpp"
+
 class Tools
 {
 public:
