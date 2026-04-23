@@ -33,7 +33,7 @@ void GameObjectManager::update(f32 dt, Input& input, sf::RenderWindow& window)
         gameObject->update(ctx);
     }
 
-    processCollisions(ctx);
+    processCollisions();
 
     // Remove marked gameObjects.
     std::erase_if(gameObjects, [](const std::unique_ptr<GameObject>& e) { return e->isMarkedForDeletion(); });
@@ -65,7 +65,7 @@ void GameObjectManager::sortGameObjectsBySpriteDrawOrder(GameObjects& gameObject
                      });
 }
 
-void GameObjectManager::processCollisions(Context& ctx)
+void GameObjectManager::processCollisions()
 {
     for (size_t i = 0; i < gameObjects.size(); ++i)
     {

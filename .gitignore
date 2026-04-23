@@ -2,3 +2,4 @@
 format-all.ps1
 .clang-format
 build
+CMakePresets.json

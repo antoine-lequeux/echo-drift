@@ -11,7 +11,7 @@ public:
 
     CTransform(GameObject& gameObject);
 
-    void update(Context& ctx) override {}
+    void update(Context& _) override {}
 
     // Local setters/getters.
     void setPosition(sf::Vector2f pos);

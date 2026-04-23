@@ -9,5 +9,5 @@ public:
 
     CProjectile(GameObject& gameObject) : Component(gameObject) {}
 
-    void update(Context& ctx) override {}
+    void update(Context& _) override {}
 };

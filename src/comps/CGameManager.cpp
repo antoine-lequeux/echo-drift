@@ -45,7 +45,7 @@ void CGameManager::update(Context& ctx)
         col.rx = sprite.getWorldSize().x / 2.f;
         col.ry = sprite.getWorldSize().x / 2.f;
 
-        auto& speedComp = asteroid.addComponent<CSpeed>(speed);
+        asteroid.addComponent<CSpeed>(speed);
 
         asteroid.addComponent<CDespawner>();
     }

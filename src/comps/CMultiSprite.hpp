@@ -16,9 +16,9 @@ public:
         i32 frameHeight = tex->getSize().y;
 
         // Fill the vector of rects automatically, using the frame count and the texture dimensions.
-        for (i32 i = 0; i < frameCount; i++)
+        for (usize i = 0; i < frameCount; i++)
         {
-            rects.push_back(sf::IntRect{{frameWidth * i, 0}, {frameWidth, frameHeight}});
+            rects.push_back(sf::IntRect{{frameWidth * static_cast<i32>(i), 0}, {frameWidth, frameHeight}});
         }
         setTextureRect(rects[0]);
     }

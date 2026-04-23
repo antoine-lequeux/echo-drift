@@ -297,7 +297,7 @@ private:
     void update(f32 dt, Input& input, sf::RenderWindow& window);
 
     // Detects layer-based collisions and destroys involved entities.
-    void processCollisions(Context& ctx);
+    void processCollisions();
 
     // Sort gameObjects by CSprite draw order. Only runs when drawOrderDirty is true.
     void sortGameObjectsBySpriteDrawOrder(GameObjects& gameObjects);
