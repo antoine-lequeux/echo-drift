@@ -121,8 +121,8 @@ void CSpaceShip::shootProjectile(Context& ctx)
 
     auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
     col.rx = sprite.getSize().x;
-    col.ry = sprite.getSize().x;
-    col.offset.y = -15.f;
+    col.ry = sprite.getSize().x / 2.f;
+    col.offset.y = -5.f;
 
     projectile.addComponent<CProjectile>();
 }
