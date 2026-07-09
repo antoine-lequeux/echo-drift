@@ -1,5 +1,7 @@
 #include "CCollider.hpp"
 
+#include <array>
+
 namespace
 {
 
@@ -35,24 +37,26 @@ bool overlapOnAxis(const Polygon& a, const Polygon& b, const sf::Vector2f& axis)
 
 bool polygonsCollide(const Polygon& a, const Polygon& b)
 {
-    std::vector<sf::Vector2f> axes;
-    axes.reserve(a.size() + b.size());
+    std::array<sf::Vector2f, 64> axes{};
+    usize axisCount = 0;
 
-    auto addAxes = [&axes](const Polygon& shape)
+    auto addAxes = [&axes, &axisCount](const Polygon& shape)
     {
-        for (size_t i = 0; i < shape.size(); ++i)
+        for (usize i = 0; i < shape.size(); ++i)
         {
             sf::Vector2f edge = shape[(i + 1) % shape.size()] - shape[i];
             sf::Vector2f normal(-edge.y, edge.x);
-            axes.push_back(normal / std::sqrt(normal.x * normal.x + normal.y * normal.y));
+            const f32 length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+            if (axisCount < axes.size())
+                axes[axisCount++] = normal / length;
         }
     };
 
     addAxes(a);
     addAxes(b);
 
-    for (auto& axis : axes)
-        if (!overlapOnAxis(a, b, axis))
+    for (usize i = 0; i < axisCount; ++i)
+        if (!overlapOnAxis(a, b, axes[i]))
             return false;
 
     return true;
@@ -62,7 +66,7 @@ sf::ConvexShape makeConvexShape(const Polygon& p)
 {
     sf::ConvexShape shape;
     shape.setPointCount(p.size());
-    for (size_t i = 0; i < p.size(); ++i)
+    for (usize i = 0; i < p.size(); ++i)
         shape.setPoint(i, p[i]);
     shape.setFillColor(sf::Color::Transparent);
     shape.setOutlineColor(sf::Color::Green);

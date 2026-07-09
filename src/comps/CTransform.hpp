@@ -43,6 +43,14 @@ private:
     f32 rotationStep = 6.f;
     sf::Vector2f scale{1.f, 1.f};
 
+    mutable bool transformDirty = true;
+    mutable sf::Vector2f cachedGlobalPosition{0.f, 0.f};
+    mutable f32 cachedGlobalRotation = 0.f;
+    mutable sf::Vector2f cachedGlobalScale{1.f, 1.f};
+    mutable f32 cachedDisplayRotation = 0.f;
+
+    void markDirty() const { transformDirty = true; }
+    void recomputeGlobal() const;
     f32 quantizeRotation(f32 angle) const { return std::round(angle / rotationStep) * rotationStep; }
 
     // Helper to get parent transform if exists.

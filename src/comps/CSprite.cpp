@@ -102,10 +102,25 @@ void CSprite::render(sf::RenderWindow& window)
     if (!cachedSprite)
         return;
 
-    cachedSprite->setPosition(transform->getGlobalPosition());
+    const sf::Vector2f position = transform->getGlobalPosition();
+    const sf::Vector2f scale = transform->getGlobalScale();
+    const sf::Vector2f viewCenter = window.getView().getCenter();
+    const sf::Vector2f viewSize = window.getView().getSize();
+    const sf::FloatRect viewBounds({viewCenter.x - viewSize.x / 2.f, viewCenter.y - viewSize.y / 2.f},
+                                   {viewSize.x, viewSize.y});
+    const sf::Vector2f size = getWorldSize();
+    const sf::FloatRect spriteBounds({position.x - size.x / 2.f, position.y - size.y / 2.f}, {size.x, size.y});
+
+    const bool overlaps = spriteBounds.position.x + spriteBounds.size.x >= viewBounds.position.x &&
+                          spriteBounds.position.x <= viewBounds.position.x + viewBounds.size.x &&
+                          spriteBounds.position.y + spriteBounds.size.y >= viewBounds.position.y &&
+                          spriteBounds.position.y <= viewBounds.position.y + viewBounds.size.y;
+    if (!overlaps)
+        return;
+
+    cachedSprite->setPosition(position);
     cachedSprite->setRotation(sf::degrees(transform->getDisplayRotation()));
-    cachedSprite->setScale({transform->getGlobalScale().x * (invertedX ? -1.f : 1.f),
-                            transform->getGlobalScale().y * (invertedY ? -1.f : 1.f)});
+    cachedSprite->setScale({scale.x * (invertedX ? -1.f : 1.f), scale.y * (invertedY ? -1.f : 1.f)});
 
     window.draw(*cachedSprite);
 }

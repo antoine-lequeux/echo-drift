@@ -14,13 +14,13 @@ public:
 private:
 
     // Utility to get the angle between a given vector and the X axis.
-    f32 getAngleDegrees(const sf::Vector2f& v)
+    inline f32 getAngleDegrees(const sf::Vector2f& v)
     {
         f32 angleRad = std::atan2(v.y, v.x);
         f32 angleDeg = angleRad * 180.f / PI;
         return angleDeg;
     }
 
-    f32 spawnTimer = 0.f;
-    f32 spawnInterval = 0.75f;
+    f32 spawnAccumulator = 0.f;
+    f32 asteroidsPerSecond = 1000.f;
 };

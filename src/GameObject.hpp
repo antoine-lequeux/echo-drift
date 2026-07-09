@@ -3,7 +3,7 @@
 #include "GameSettings.hpp"
 #include "Input.hpp"
 #include "ResourceManager.hpp"
-#include "Tools.hpp"
+#include "Utils.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -58,7 +58,7 @@ public:
     // Args are forwarded to the component's constructor.
     // Returns a reference to the added component.
     template <typename T, typename... Args>
-    T& addComponent(Args&&... args)
+    inline T& addComponent(Args&&... args)
     {
         static_assert(std::is_base_of_v<Component, T>, "T must derive from Component");
 
@@ -84,7 +84,7 @@ public:
 
     // Remove the component of type T (identified by its concrete type).
     template <typename T>
-    void removeComponent()
+    inline void removeComponent()
     {
         auto it = ownedComponents.find(std::type_index(typeid(T)));
         if (it == ownedComponents.end())
@@ -95,14 +95,14 @@ public:
 
     // Returns true if the gameObject has a component of type T (or a subclass of T).
     template <typename T>
-    bool hasComponent() const
+    inline bool hasComponent() const
     {
         return getComponent<T>() != nullptr;
     }
 
     // Get the component of type T (or a registered subclass).
     template <typename T>
-    T* getComponent()
+    inline T* getComponent()
     {
         auto key = std::type_index(typeid(T));
         auto it = aliasComponents.find(key);
@@ -122,7 +122,7 @@ public:
     }
 
     template <typename T>
-    const T* getComponent() const
+    inline const T* getComponent() const
     {
         auto it = aliasComponents.find(std::type_index(typeid(T)));
         if (it != aliasComponents.end())
@@ -143,7 +143,7 @@ public:
     }
 
     // Update all components of the gameObject.
-    void update(Context& ctx)
+    inline void update(Context& ctx)
     {
         for (auto& [key, comp] : ownedComponents)
             comp->update(ctx);
@@ -167,7 +167,7 @@ public:
     }
 
     // Mark this object (and all its children) for deletion at end of frame.
-    void destroy()
+    inline void destroy()
     {
         isDead = true;
         destroyChildren();
@@ -177,7 +177,8 @@ public:
             parent = nullptr;
         }
     }
-    bool isMarkedForDeletion() const { return isDead; }
+
+    inline bool isMarkedForDeletion() const { return isDead; }
 
 private:
 
@@ -185,14 +186,14 @@ private:
     std::unordered_map<std::type_index, Component*> aliasComponents;
 
     // Remove all alias entries that point to the given raw pointer.
-    void removeAliasesFor(Component* ptr)
+    inline void removeAliasesFor(Component* ptr)
     {
         std::erase_if(aliasComponents, [ptr](const auto& kv) { return kv.second == ptr; });
     }
 
     // Try to cast the component to each known intermediate base and insert alias entries.
     template <typename T>
-    void registerBaseAliases(T& instance)
+    inline void registerBaseAliases(T& instance)
     {
         // List every class that sits between a concrete component and Component itself.
         tryRegisterAlias<CSprite>(instance);
@@ -200,7 +201,7 @@ private:
     }
 
     template <typename Base, typename T>
-    void tryRegisterAlias(T& instance)
+    inline void tryRegisterAlias(T& instance)
     {
         if constexpr (std::is_base_of_v<Base, T> && !std::is_same_v<Base, T>)
             aliasComponents[std::type_index(typeid(Base))] = static_cast<Component*>(static_cast<Base*>(&instance));
@@ -281,8 +282,18 @@ public:
         return n;
     }
 
+    // Return the number of live GameObjects.
+    usize count() const
+    {
+        usize n = 0;
+        for (auto& obj : gameObjects)
+            if (!obj->isMarkedForDeletion())
+                ++n;
+        return n;
+    }
+
     // Signal that draw order has changed and a re-sort is needed next frame.
-    void markDrawOrderDirty() { drawOrderDirty = true; }
+    inline void markDrawOrderDirty() { drawOrderDirty = true; }
 
     // This reference is always valid, since the resource manager and the gameobject manager
     // are both destroyed at the same time, when the app terminates.

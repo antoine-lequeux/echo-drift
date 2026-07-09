@@ -1,6 +1,9 @@
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "GameObject.hpp"
 #include "comps/CCollider.hpp"
@@ -65,40 +68,191 @@ void GameObjectManager::sortGameObjectsBySpriteDrawOrder(GameObjects& gameObject
                      });
 }
 
+namespace
+{
+constexpr f32 CollisionGridCellSize = 200.f;
+
+struct Aabb
+{
+    f32 minX{};
+    f32 maxX{};
+    f32 minY{};
+    f32 maxY{};
+};
+
+struct CellKey
+{
+    i32 x{};
+    i32 y{};
+
+    bool operator==(const CellKey& other) const = default;
+};
+
+struct CellKeyHash
+{
+    usize operator()(const CellKey& key) const noexcept
+    {
+        return (static_cast<u64>(static_cast<u32>(key.x)) << 32) | static_cast<u32>(key.y);
+    }
+};
+
+using BucketMap = std::unordered_map<CellKey, std::vector<usize>, CellKeyHash>;
+
+Aabb getBounds(const Polygon& polygon)
+{
+    Aabb bounds{polygon[0].x, polygon[0].x, polygon[0].y, polygon[0].y};
+    for (const auto& point : polygon)
+    {
+        bounds.minX = std::min(bounds.minX, point.x);
+        bounds.maxX = std::max(bounds.maxX, point.x);
+        bounds.minY = std::min(bounds.minY, point.y);
+        bounds.maxY = std::max(bounds.maxY, point.y);
+    }
+    return bounds;
+}
+
+bool isPotentialCollisionPair(Layer a, Layer b)
+{
+    return (a == Layer::Asteroid && (b == Layer::Player || b == Layer::Projectile)) ||
+           (b == Layer::Asteroid && (a == Layer::Player || a == Layer::Projectile));
+}
+} // namespace
+
 void GameObjectManager::processCollisions()
 {
-    for (size_t i = 0; i < gameObjects.size(); ++i)
+    std::array<BucketMap, 3> spatialBuckets;
+    for (auto& bucketMap : spatialBuckets)
+        bucketMap.reserve(gameObjects.size() / 4 + 1);
+
+    std::vector<usize> activeIndices;
+    activeIndices.reserve(gameObjects.size());
+
+    for (usize i = 0; i < gameObjects.size(); ++i)
     {
         if (gameObjects[i]->isMarkedForDeletion())
             continue;
 
-        auto* a = gameObjects[i]->getComponent<CCollider>();
+        auto* collider = gameObjects[i]->getComponent<CCollider>();
+        if (!collider || collider->getPolygon().empty())
+            continue;
+
+        const auto& polygon = collider->getPolygon();
+        const auto bounds = getBounds(polygon);
+        const i32 minCellX = static_cast<i32>(std::floor(bounds.minX / CollisionGridCellSize));
+        const i32 maxCellX = static_cast<i32>(std::floor(bounds.maxX / CollisionGridCellSize));
+        const i32 minCellY = static_cast<i32>(std::floor(bounds.minY / CollisionGridCellSize));
+        const i32 maxCellY = static_cast<i32>(std::floor(bounds.maxY / CollisionGridCellSize));
+
+        activeIndices.push_back(i);
+
+        for (i32 cellY = minCellY; cellY <= maxCellY; ++cellY)
+        {
+            for (i32 cellX = minCellX; cellX <= maxCellX; ++cellX)
+            {
+                spatialBuckets[static_cast<usize>(collider->getLayer())][{cellX, cellY}].push_back(i);
+            }
+        }
+    }
+
+    std::vector<std::pair<usize, usize>> collisionsToResolve;
+    collisionsToResolve.reserve(activeIndices.size() * 2);
+
+    for (usize currentIndex : activeIndices)
+    {
+        auto* a = gameObjects[currentIndex]->getComponent<CCollider>();
         if (!a)
             continue;
 
-        for (size_t j = i + 1; j < gameObjects.size(); ++j)
+        const auto& polygon = a->getPolygon();
+        if (polygon.empty())
+            continue;
+
+        const auto bounds = getBounds(polygon);
+        const i32 minCellX = static_cast<i32>(std::floor(bounds.minX / CollisionGridCellSize));
+        const i32 maxCellX = static_cast<i32>(std::floor(bounds.maxX / CollisionGridCellSize));
+        const i32 minCellY = static_cast<i32>(std::floor(bounds.minY / CollisionGridCellSize));
+        const i32 maxCellY = static_cast<i32>(std::floor(bounds.maxY / CollisionGridCellSize));
+
+        std::vector<usize> candidateIndices;
+        candidateIndices.reserve(32);
+        std::unordered_set<usize> seenCandidates;
+        seenCandidates.reserve(32);
+
+        const auto currentLayerIndex = static_cast<usize>(a->getLayer());
+        std::array<usize, 2> relevantLayerIndices{};
+        usize relevantLayerCount = 0;
+
+        if (currentLayerIndex == static_cast<usize>(Layer::Asteroid))
         {
-            if (gameObjects[j]->isMarkedForDeletion())
-                continue;
+            relevantLayerIndices[0] = static_cast<usize>(Layer::Player);
+            relevantLayerIndices[1] = static_cast<usize>(Layer::Projectile);
+            relevantLayerCount = 2;
+        }
+        else
+        {
+            relevantLayerIndices[0] = static_cast<usize>(Layer::Asteroid);
+            relevantLayerCount = 1;
+        }
 
-            auto* b = gameObjects[j]->getComponent<CCollider>();
-            if (!b || !a->isTouching(*b))
-                continue;
-
-            Layer la = a->getLayer();
-            Layer lb = b->getLayer();
-
-            // Destroy both objects when a player or projectile collides with an asteroid.
-            bool involvesAsteroid = (la == Layer::Asteroid || lb == Layer::Asteroid);
-            bool involvesAttacker =
-                (la == Layer::Player || la == Layer::Projectile || lb == Layer::Player || lb == Layer::Projectile);
-
-            if (involvesAsteroid && involvesAttacker)
+        for (i32 cellY = minCellY; cellY <= maxCellY; ++cellY)
+        {
+            for (i32 cellX = minCellX; cellX <= maxCellX; ++cellX)
             {
-                gameObjects[i]->destroy();
-                gameObjects[j]->destroy();
+                for (i32 neighborY = cellY - 1; neighborY <= cellY + 1; ++neighborY)
+                {
+                    for (i32 neighborX = cellX - 1; neighborX <= cellX + 1; ++neighborX)
+                    {
+                        for (usize layerIndex = 0; layerIndex < relevantLayerCount; ++layerIndex)
+                        {
+                            auto it = spatialBuckets[relevantLayerIndices[layerIndex]].find({neighborX, neighborY});
+                            if (it == spatialBuckets[relevantLayerIndices[layerIndex]].end())
+                                continue;
+
+                            for (usize candidateIndex : it->second)
+                            {
+                                if (candidateIndex <= currentIndex)
+                                    continue;
+                                if (!seenCandidates.insert(candidateIndex).second)
+                                    continue;
+                                candidateIndices.push_back(candidateIndex);
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        for (usize candidateIndex : candidateIndices)
+        {
+            if (gameObjects[candidateIndex]->isMarkedForDeletion())
+                continue;
+
+            auto* b = gameObjects[candidateIndex]->getComponent<CCollider>();
+            if (!b || !isPotentialCollisionPair(a->getLayer(), b->getLayer()))
+                continue;
+
+            if (!a->isTouching(*b))
+                continue;
+
+            collisionsToResolve.emplace_back(currentIndex, candidateIndex);
+        }
+    }
+
+    for (const auto& [i, j] : collisionsToResolve)
+    {
+        if (gameObjects[i]->isMarkedForDeletion() || gameObjects[j]->isMarkedForDeletion())
+            continue;
+
+        auto* a = gameObjects[i]->getComponent<CCollider>();
+        auto* b = gameObjects[j]->getComponent<CCollider>();
+        if (!a || !b)
+            continue;
+
+        if (!isPotentialCollisionPair(a->getLayer(), b->getLayer()) || !a->isTouching(*b))
+            continue;
+
+        gameObjects[i]->destroy();
+        gameObjects[j]->destroy();
     }
 }
 

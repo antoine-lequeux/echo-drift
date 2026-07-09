@@ -9,12 +9,45 @@
 #include "comps/CSprite.hpp"
 #include "comps/CTransform.hpp"
 
-Application::Application() : window(sf::VideoMode({1280, 720}), "Echo Drift"), entityManager(resourceManager)
+#include <array>
+#include <cmath>
+#include <filesystem>
+#include <string>
+
+Application::Application()
+    : window(sf::VideoMode({1280, 720}), "Echo Drift"), entityManager(resourceManager), uiFont(),
+      fpsText(uiFont, "FPS: 0", 30), entityCountText(uiFont, "Entities: 0", 30)
 {
-    window.setFramerateLimit(60);
+    window.setVerticalSyncEnabled(false);
+    window.setFramerateLimit(0);
     gameView = sf::View({0.f, 0.f}, {1280.f, 720.f});
     gameView.zoom(0.75f);
     window.setView(gameView);
+
+    lastFpsUpdateTime = std::chrono::steady_clock::now();
+    const std::array<std::filesystem::path, 3> fontCandidates = {
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/consola.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+    };
+
+    for (const auto& fontPath : fontCandidates)
+    {
+        if (uiFont.openFromFile(fontPath))
+        {
+            break;
+        }
+    }
+
+    if (!uiFont.openFromFile("assets/fonts/quantico.ttf")) std::cerr << "Font not found!\n";
+
+    fpsText.setFont(uiFont);
+    fpsText.setFillColor(sf::Color::White);
+    fpsText.setPosition({10.f, 10.f});
+
+    entityCountText.setFont(uiFont);
+    entityCountText.setFillColor(sf::Color::White);
+    entityCountText.setPosition({10.f, 60.f});
 }
 
 void Application::run()
@@ -98,7 +131,32 @@ void Application::processEvents()
 
 void Application::update(f32 dt)
 {
+    ++frameCounter;
+    const auto now = std::chrono::steady_clock::now();
+    const auto elapsedMicroseconds =
+        std::chrono::duration_cast<std::chrono::microseconds>(now - lastFpsUpdateTime).count();
+
+    if (elapsedMicroseconds >= 500000)
+    {
+        const double fps = static_cast<double>(frameCounter) / (static_cast<double>(elapsedMicroseconds) / 1'000'000.0);
+        fpsValue = static_cast<u32>(std::llround(fps));
+        fpsText.setString("FPS: " + std::to_string(fpsValue));
+
+        entityCountValue = static_cast<u32>(entityManager.count());
+        entityCountText.setString("Entities: " + std::to_string(entityCountValue));
+
+        frameCounter = 0;
+        lastFpsUpdateTime = now;
+    }
+
     window.clear(sf::Color::Black);
     entityManager.update(dt, input, window);
+
+    const auto previousView = window.getView();
+    window.setView(window.getDefaultView());
+    window.draw(fpsText);
+    window.draw(entityCountText);
+    window.setView(previousView);
+
     window.display();
 }

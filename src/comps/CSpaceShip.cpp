@@ -6,6 +6,9 @@
 #include "CSpeed.hpp"
 #include "CSprite.hpp"
 
+#include <algorithm>
+#include <cmath>
+
 CSpaceShip::CSpaceShip(GameObject& gameObject) : Component(gameObject) {}
 
 void CSpaceShip::update(Context& ctx)
@@ -59,7 +62,7 @@ void CSpaceShip::update(Context& ctx)
     spriteComp->setInversionX(speedComp->getSpeed().x > 0.01f);
 
     timeSinceLastShot += ctx.dt;
-    if (ctx.input.isActionTriggered(Action::Shoot) && timeSinceLastShot >= shootCooldown)
+    if (ctx.input.isActionActive(Action::Shoot) && timeSinceLastShot >= shootCooldown)
         shootProjectile(ctx);
 
     // Smoothly interpolate the rotation towards the target angle.
@@ -101,28 +104,39 @@ void CSpaceShip::shootProjectile(Context& ctx)
         return;
 
     // Get the world position of the point located at the front of the ship.
-    sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
+    const sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
+    const sf::Vector2f baseDirection = (shipFront - shipTransform->getGlobalPosition()).normalized();
 
-    // Add a new projectile gameObject.
-    auto& projectile = ctx.manager.spawn();
+    const u32 burstCount = std::max<u32>(1u, projectileBurstCount);
+    const f32 halfSpread = projectileSpreadAngle / 2.f;
+    const f32 angleStep = burstCount > 1 ? (halfSpread * 2.f) / static_cast<f32>(burstCount - 1) : 0.f;
 
-    auto& transform = projectile.addComponent<CTransform>();
-    transform.setPosition(shipFront + shipSpeed->getSpeed() * ctx.dt * 3.f);
-    transform.setRotation(shipTransform->getLocalRotation());
+    for (u32 i = 0; i < burstCount; ++i)
+    {
+        const f32 angleOffset = burstCount > 1 ? -halfSpread + static_cast<f32>(i) * angleStep : 0.f;
+        const f32 angleRad = angleOffset * PI / 180.f;
+        const sf::Vector2f rotatedDirection = {
+            baseDirection.x * std::cos(angleRad) - baseDirection.y * std::sin(angleRad),
+            baseDirection.x * std::sin(angleRad) + baseDirection.y * std::cos(angleRad),
+        };
 
-    auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(ResourceID::Projectile), 6);
+        auto& projectile = ctx.manager.spawn();
 
-    sf::Vector2f speedDirection = shipFront - shipTransform->getGlobalPosition();
-    sf::Vector2f speed = speedDirection.normalized() * 800.f;
+        auto& transform = projectile.addComponent<CTransform>();
+        transform.setPosition(shipFront + shipSpeed->getSpeed() * ctx.dt * 3.f);
+        transform.setRotation(shipTransform->getLocalRotation() + angleOffset);
 
-    projectile.addComponent<CSpeed>(speed);
+        auto& sprite =
+            projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(ResourceID::Projectile), 6);
 
-    projectile.addComponent<CDespawner>();
+        projectile.addComponent<CSpeed>(rotatedDirection.normalized() * 800.f);
+        projectile.addComponent<CDespawner>();
 
-    auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
-    col.rx = sprite.getSize().x;
-    col.ry = sprite.getSize().x / 2.f;
-    col.offset.y = -5.f;
+        auto& col = projectile.addComponent<CEllipseCollider>(Layer::Projectile);
+        col.rx = sprite.getSize().x;
+        col.ry = sprite.getSize().x / 2.f;
+        col.offset.y = -5.f;
 
-    projectile.addComponent<CProjectile>();
+        projectile.addComponent<CProjectile>();
+    }
 }

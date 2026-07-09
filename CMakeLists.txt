@@ -40,7 +40,7 @@ target_sources(echo-drift PRIVATE
     src/comps/CProjectile.hpp
     src/comps/CTransform.hpp
     src/comps/Ctransform.cpp
-    src/Tools.hpp
+    src/Utils.hpp
     src/ResourceManager.hpp
     src/Resources.hpp
     src/GameSettings.hpp
