@@ -27,7 +27,7 @@ private:
     f32 targetAngle = 0.f;
 
     // Seconds between shots.
-    f32 shootCooldown = 0.05f;
+    f32 shootCooldown = 0.02f;
     f32 timeSinceLastShot = 0.f;
 
     u32 projectileBurstCount = 9;

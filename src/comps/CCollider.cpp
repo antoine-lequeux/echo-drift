@@ -118,6 +118,15 @@ void CEllipseCollider::rebuildPolygon()
     if (rot != 0.f)
         for (auto& pt : cachedPolygon)
             pt = rotatePoint(pt, {cx, cy}, rot);
+
+    cachedBounds = {cachedPolygon[0].x, cachedPolygon[0].x, cachedPolygon[0].y, cachedPolygon[0].y};
+    for (const auto& point : cachedPolygon)
+    {
+        cachedBounds.minX = std::min(cachedBounds.minX, point.x);
+        cachedBounds.maxX = std::max(cachedBounds.maxX, point.x);
+        cachedBounds.minY = std::min(cachedBounds.minY, point.y);
+        cachedBounds.maxY = std::max(cachedBounds.maxY, point.y);
+    }
 }
 
 void CEllipseCollider::showBounds(sf::RenderWindow& window) const
@@ -152,6 +161,15 @@ void CRectangleCollider::rebuildPolygon()
     if (rot != 0.f)
         for (auto& pt : cachedPolygon)
             pt = rotatePoint(pt, {cx, cy}, rot);
+
+    cachedBounds = {cachedPolygon[0].x, cachedPolygon[0].x, cachedPolygon[0].y, cachedPolygon[0].y};
+    for (const auto& point : cachedPolygon)
+    {
+        cachedBounds.minX = std::min(cachedBounds.minX, point.x);
+        cachedBounds.maxX = std::max(cachedBounds.maxX, point.x);
+        cachedBounds.minY = std::min(cachedBounds.minY, point.y);
+        cachedBounds.maxY = std::max(cachedBounds.maxY, point.y);
+    }
 }
 
 void CRectangleCollider::showBounds(sf::RenderWindow& window) const

@@ -7,6 +7,13 @@ CSprite::CSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, i32 d
 {
     textureRect = sf::IntRect({0, 0}, (sf::Vector2i)texture->getSize());
     texture->setSmooth(false);
+    gameObject.drawOrder = drawOrder;
+}
+
+void CSprite::setDrawOrder(i32 order)
+{
+    drawOrder = order;
+    gameObject.drawOrder = order;
 }
 
 void CSprite::update(Context& ctx) { render(ctx.window); }

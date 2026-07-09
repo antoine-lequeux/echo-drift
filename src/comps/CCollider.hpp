@@ -11,6 +11,14 @@ enum class Layer
     Asteroid
 };
 
+struct Aabb
+{
+    f32 minX{};
+    f32 maxX{};
+    f32 minY{};
+    f32 maxY{};
+};
+
 using Polygon = std::vector<sf::Vector2f>;
 
 // Abstract component that provides a bounding shape for collision detection.
@@ -30,6 +38,7 @@ public:
     Layer getLayer() const { return layer; }
 
     const Polygon& getPolygon() const { return cachedPolygon; }
+    const Aabb& getBounds() const { return cachedBounds; }
 
     // Draw the shape for debugging purposes.
     virtual void showBounds(sf::RenderWindow& window) const = 0;
@@ -41,6 +50,7 @@ protected:
 
     Layer layer;
     Polygon cachedPolygon;
+    Aabb cachedBounds;
 };
 
 // Derived component providing an ellipsoidal collider.

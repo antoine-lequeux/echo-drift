@@ -21,7 +21,7 @@ public:
     void setColor(const sf::Color& color);
     sf::Color getColor() const;
 
-    void setDrawOrder(i32 order) { drawOrder = order; }
+    void setDrawOrder(i32 order);
     i32 getDrawOrder() const { return drawOrder; }
 
     void setInversionX(bool state);

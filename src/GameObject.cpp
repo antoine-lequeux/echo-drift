@@ -38,13 +38,25 @@ void GameObjectManager::update(f32 dt, Input& input, sf::RenderWindow& window)
 
     processCollisions();
 
-    // Remove marked gameObjects.
+    // Remove marked gameObjects and colliders.
     std::erase_if(gameObjects, [](const std::unique_ptr<GameObject>& e) { return e->isMarkedForDeletion(); });
+    std::erase_if(asteroidColliders, [](CCollider* c) { return c->gameObject.isMarkedForDeletion(); });
+    std::erase_if(dynamicColliders, [](CCollider* c) { return c->gameObject.isMarkedForDeletion(); });
 
     // Add pending gameObjects. Re-mark dirty so the draw order sort runs on the next frame.
     if (!pendingGameObjects.empty())
     {
         drawOrderDirty = true;
+        for (auto& obj : pendingGameObjects)
+        {
+            if (auto* col = obj->getComponent<CCollider>())
+            {
+                if (col->getLayer() == Layer::Asteroid)
+                    asteroidColliders.push_back(col);
+                else
+                    dynamicColliders.push_back(col);
+            }
+        }
         std::ranges::move(pendingGameObjects, std::back_inserter(gameObjects));
         pendingGameObjects.clear();
     }
@@ -59,200 +71,99 @@ void GameObjectManager::sortGameObjectsBySpriteDrawOrder(GameObjects& gameObject
 
     std::stable_sort(gameObjects.begin(), gameObjects.end(),
                      [](const std::unique_ptr<GameObject>& a, const std::unique_ptr<GameObject>& b)
-                     {
-                         auto* sa = a->getComponent<CSprite>();
-                         auto* sb = b->getComponent<CSprite>();
-                         i32 oa = sa ? sa->getDrawOrder() : 0;
-                         i32 ob = sb ? sb->getDrawOrder() : 0;
-                         return oa < ob;
-                     });
+                     { return a->drawOrder < b->drawOrder; });
 }
-
-namespace
-{
-constexpr f32 CollisionGridCellSize = 200.f;
-
-struct Aabb
-{
-    f32 minX{};
-    f32 maxX{};
-    f32 minY{};
-    f32 maxY{};
-};
-
-struct CellKey
-{
-    i32 x{};
-    i32 y{};
-
-    bool operator==(const CellKey& other) const = default;
-};
-
-struct CellKeyHash
-{
-    usize operator()(const CellKey& key) const noexcept
-    {
-        return (static_cast<u64>(static_cast<u32>(key.x)) << 32) | static_cast<u32>(key.y);
-    }
-};
-
-using BucketMap = std::unordered_map<CellKey, std::vector<usize>, CellKeyHash>;
-
-Aabb getBounds(const Polygon& polygon)
-{
-    Aabb bounds{polygon[0].x, polygon[0].x, polygon[0].y, polygon[0].y};
-    for (const auto& point : polygon)
-    {
-        bounds.minX = std::min(bounds.minX, point.x);
-        bounds.maxX = std::max(bounds.maxX, point.x);
-        bounds.minY = std::min(bounds.minY, point.y);
-        bounds.maxY = std::max(bounds.maxY, point.y);
-    }
-    return bounds;
-}
-
-bool isPotentialCollisionPair(Layer a, Layer b)
-{
-    return (a == Layer::Asteroid && (b == Layer::Player || b == Layer::Projectile)) ||
-           (b == Layer::Asteroid && (a == Layer::Player || a == Layer::Projectile));
-}
-} // namespace
 
 void GameObjectManager::processCollisions()
 {
-    std::array<BucketMap, 3> spatialBuckets;
-    for (auto& bucketMap : spatialBuckets)
-        bucketMap.reserve(gameObjects.size() / 4 + 1);
+    for (auto& cell : asteroidGrid)
+        cell.clear();
 
-    std::vector<usize> activeIndices;
-    activeIndices.reserve(gameObjects.size());
+    const f32 halfWorldWidth = (GridSizeX * CollisionGridCellSize) / 2.f;
+    const f32 halfWorldHeight = (GridSizeY * CollisionGridCellSize) / 2.f;
 
-    for (usize i = 0; i < gameObjects.size(); ++i)
+    auto getCellCoords = [&](f32 x, f32 y, i32& cx, i32& cy)
     {
-        if (gameObjects[i]->isMarkedForDeletion())
+        cx = static_cast<i32>(std::floor((x + halfWorldWidth) / CollisionGridCellSize));
+        cy = static_cast<i32>(std::floor((y + halfWorldHeight) / CollisionGridCellSize));
+    };
+
+    // Populate grid with Asteroids.
+    for (CCollider* collider : asteroidColliders)
+    {
+        if (collider->gameObject.isMarkedForDeletion() || collider->getPolygon().empty())
             continue;
 
-        auto* collider = gameObjects[i]->getComponent<CCollider>();
-        if (!collider || collider->getPolygon().empty())
-            continue;
+        const auto& bounds = collider->getBounds();
 
-        const auto& polygon = collider->getPolygon();
-        const auto bounds = getBounds(polygon);
-        const i32 minCellX = static_cast<i32>(std::floor(bounds.minX / CollisionGridCellSize));
-        const i32 maxCellX = static_cast<i32>(std::floor(bounds.maxX / CollisionGridCellSize));
-        const i32 minCellY = static_cast<i32>(std::floor(bounds.minY / CollisionGridCellSize));
-        const i32 maxCellY = static_cast<i32>(std::floor(bounds.maxY / CollisionGridCellSize));
+        i32 minX, maxX, minY, maxY;
+        getCellCoords(bounds.minX, bounds.minY, minX, minY);
+        getCellCoords(bounds.maxX, bounds.maxY, maxX, maxY);
 
-        activeIndices.push_back(i);
+        minX = std::max(0, std::min(GridSizeX - 1, minX));
+        maxX = std::max(0, std::min(GridSizeX - 1, maxX));
+        minY = std::max(0, std::min(GridSizeY - 1, minY));
+        maxY = std::max(0, std::min(GridSizeY - 1, maxY));
 
-        for (i32 cellY = minCellY; cellY <= maxCellY; ++cellY)
+        for (i32 y = minY; y <= maxY; ++y)
         {
-            for (i32 cellX = minCellX; cellX <= maxCellX; ++cellX)
+            for (i32 x = minX; x <= maxX; ++x)
             {
-                spatialBuckets[static_cast<usize>(collider->getLayer())][{cellX, cellY}].push_back(i);
+                asteroidGrid[y * GridSizeX + x].push_back(collider);
             }
         }
     }
 
-    std::vector<std::pair<usize, usize>> collisionsToResolve;
-    collisionsToResolve.reserve(activeIndices.size() * 2);
+    std::vector<std::pair<CCollider*, CCollider*>> collisionsToResolve;
+    collisionsToResolve.reserve(100);
 
-    for (usize currentIndex : activeIndices)
+    // Check Players and Projectiles within the grid.
+    for (CCollider* a : dynamicColliders)
     {
-        auto* a = gameObjects[currentIndex]->getComponent<CCollider>();
-        if (!a)
+        if (a->gameObject.isMarkedForDeletion() || a->getPolygon().empty())
             continue;
 
-        const auto& polygon = a->getPolygon();
-        if (polygon.empty())
+        const auto& bounds = a->getBounds();
+
+        i32 minX, maxX, minY, maxY;
+        getCellCoords(bounds.minX, bounds.minY, minX, minY);
+        getCellCoords(bounds.maxX, bounds.maxY, maxX, maxY);
+
+        // If completely outside the grid, no asteroid could possibly hit it.
+        if (maxX < 0 || minX >= GridSizeX || maxY < 0 || minY >= GridSizeY)
             continue;
 
-        const auto bounds = getBounds(polygon);
-        const i32 minCellX = static_cast<i32>(std::floor(bounds.minX / CollisionGridCellSize));
-        const i32 maxCellX = static_cast<i32>(std::floor(bounds.maxX / CollisionGridCellSize));
-        const i32 minCellY = static_cast<i32>(std::floor(bounds.minY / CollisionGridCellSize));
-        const i32 maxCellY = static_cast<i32>(std::floor(bounds.maxY / CollisionGridCellSize));
+        minX = std::max(0, std::min(GridSizeX - 1, minX));
+        maxX = std::max(0, std::min(GridSizeX - 1, maxX));
+        minY = std::max(0, std::min(GridSizeY - 1, minY));
+        maxY = std::max(0, std::min(GridSizeY - 1, maxY));
 
-        std::vector<usize> candidateIndices;
-        candidateIndices.reserve(32);
-        std::unordered_set<usize> seenCandidates;
-        seenCandidates.reserve(32);
-
-        const auto currentLayerIndex = static_cast<usize>(a->getLayer());
-        std::array<usize, 2> relevantLayerIndices{};
-        usize relevantLayerCount = 0;
-
-        if (currentLayerIndex == static_cast<usize>(Layer::Asteroid))
+        for (i32 y = minY; y <= maxY; ++y)
         {
-            relevantLayerIndices[0] = static_cast<usize>(Layer::Player);
-            relevantLayerIndices[1] = static_cast<usize>(Layer::Projectile);
-            relevantLayerCount = 2;
-        }
-        else
-        {
-            relevantLayerIndices[0] = static_cast<usize>(Layer::Asteroid);
-            relevantLayerCount = 1;
-        }
-
-        for (i32 cellY = minCellY; cellY <= maxCellY; ++cellY)
-        {
-            for (i32 cellX = minCellX; cellX <= maxCellX; ++cellX)
+            for (i32 x = minX; x <= maxX; ++x)
             {
-                for (i32 neighborY = cellY - 1; neighborY <= cellY + 1; ++neighborY)
+                for (CCollider* b : asteroidGrid[y * GridSizeX + x])
                 {
-                    for (i32 neighborX = cellX - 1; neighborX <= cellX + 1; ++neighborX)
-                    {
-                        for (usize layerIndex = 0; layerIndex < relevantLayerCount; ++layerIndex)
-                        {
-                            auto it = spatialBuckets[relevantLayerIndices[layerIndex]].find({neighborX, neighborY});
-                            if (it == spatialBuckets[relevantLayerIndices[layerIndex]].end())
-                                continue;
+                    if (b->gameObject.isMarkedForDeletion() || b->getPolygon().empty())
+                        continue;
 
-                            for (usize candidateIndex : it->second)
-                            {
-                                if (candidateIndex <= currentIndex)
-                                    continue;
-                                if (!seenCandidates.insert(candidateIndex).second)
-                                    continue;
-                                candidateIndices.push_back(candidateIndex);
-                            }
-                        }
+                    if (a->isTouching(*b))
+                    {
+                        collisionsToResolve.emplace_back(a, b);
                     }
                 }
             }
         }
-
-        for (usize candidateIndex : candidateIndices)
-        {
-            if (gameObjects[candidateIndex]->isMarkedForDeletion())
-                continue;
-
-            auto* b = gameObjects[candidateIndex]->getComponent<CCollider>();
-            if (!b || !isPotentialCollisionPair(a->getLayer(), b->getLayer()))
-                continue;
-
-            if (!a->isTouching(*b))
-                continue;
-
-            collisionsToResolve.emplace_back(currentIndex, candidateIndex);
-        }
     }
 
-    for (const auto& [i, j] : collisionsToResolve)
+    // Resolve collisions
+    for (const auto& [a, b] : collisionsToResolve)
     {
-        if (gameObjects[i]->isMarkedForDeletion() || gameObjects[j]->isMarkedForDeletion())
-            continue;
-
-        auto* a = gameObjects[i]->getComponent<CCollider>();
-        auto* b = gameObjects[j]->getComponent<CCollider>();
-        if (!a || !b)
-            continue;
-
-        if (!isPotentialCollisionPair(a->getLayer(), b->getLayer()) || !a->isTouching(*b))
-            continue;
-
-        gameObjects[i]->destroy();
-        gameObjects[j]->destroy();
+        if (!a->gameObject.isMarkedForDeletion() && !b->gameObject.isMarkedForDeletion())
+        {
+            a->gameObject.destroy();
+            b->gameObject.destroy();
+        }
     }
 }
 

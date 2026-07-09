@@ -22,5 +22,5 @@ private:
     }
 
     f32 spawnAccumulator = 0.f;
-    f32 asteroidsPerSecond = 1000.f;
+    f32 asteroidsPerSecond = 1800.f;
 };

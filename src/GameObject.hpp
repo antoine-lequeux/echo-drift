@@ -6,6 +6,7 @@
 #include "Utils.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -212,6 +213,10 @@ private:
 
     // Flag to mark the gameObject for deletion.
     bool isDead = false;
+
+public:
+
+    i32 drawOrder = 0;
 };
 
 using GameObjects = std::vector<std::unique_ptr<GameObject>>;
@@ -321,4 +326,14 @@ private:
 
     // Set to true whenever a spawn or draw order change requires a re-sort.
     bool drawOrderDirty = true;
+
+    // Grid for spatial partitioning.
+    static constexpr i32 GridSizeX = 32;
+    static constexpr i32 GridSizeY = 32;
+    static constexpr f32 CollisionGridCellSize = 200.f;
+    std::array<std::vector<CCollider*>, GridSizeX * GridSizeY> asteroidGrid;
+
+    // Fast iteration lists for colliders.
+    std::vector<CCollider*> asteroidColliders;
+    std::vector<CCollider*> dynamicColliders;
 };
