@@ -15,8 +15,8 @@
 #include <string>
 
 Application::Application()
-    : window(sf::VideoMode({1280, 720}), "Echo Drift"), entityManager(resourceManager), uiFont(),
-      fpsText(uiFont, "FPS: 0", 30), entityCountText(uiFont, "Entities: 0", 30)
+    : window(sf::VideoMode({1280, 720}), "Echo Drift"), entityManager(resourceManager), uiFont(), fpsText(uiFont, "FPS: 0", 30),
+      entityCountText(uiFont, "Entities: 0", 30)
 {
     window.setVerticalSyncEnabled(false);
     window.setFramerateLimit(0);
@@ -33,10 +33,7 @@ Application::Application()
 
     for (const auto& fontPath : fontCandidates)
     {
-        if (uiFont.openFromFile(fontPath))
-        {
-            break;
-        }
+        if (uiFont.openFromFile(fontPath)) { break; }
     }
 
     if (!uiFont.openFromFile("assets/fonts/quantico.ttf")) std::cerr << "Font not found!\n";
@@ -85,9 +82,7 @@ void Application::setup()
         {{128, 0}, {64, 64}},
     };
 
-    resourceManager.add<Animation>(ResourceID::PlayerBlueAnim,
-                                   resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), frames,
-                                   0.2f, true);
+    resourceManager.add<Animation>(ResourceID::PlayerBlueAnim, resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), frames, 0.2f, true);
 
     auto& spaceShip = entityManager.spawn();
 
@@ -100,8 +95,7 @@ void Application::setup()
     // csprite.setDrawOrder(1);
     // csprite.play();
 
-    auto& csprite = spaceShip.addComponent<CMultiSprite>(
-        resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), 3, 1);
+    auto& csprite = spaceShip.addComponent<CMultiSprite>(resourceManager.get<sf::Texture>(ResourceID::PlayerBlueAnimSpritesheet), 3, 1);
 
     spaceShip.addComponent<CSpeed>(sf::Vector2f{0.f, 0.f});
     spaceShip.addComponent<CSpaceShip>();
@@ -123,8 +117,7 @@ void Application::processEvents()
 {
     while (const std::optional event = window.pollEvent())
     {
-        if (event->is<sf::Event::Closed>())
-            window.close();
+        if (event->is<sf::Event::Closed>()) window.close();
         input.handleEvent(*event);
     }
 }
@@ -133,8 +126,7 @@ void Application::update(f32 dt)
 {
     ++frameCounter;
     const auto now = std::chrono::steady_clock::now();
-    const auto elapsedMicroseconds =
-        std::chrono::duration_cast<std::chrono::microseconds>(now - lastFpsUpdateTime).count();
+    const auto elapsedMicroseconds = std::chrono::duration_cast<std::chrono::microseconds>(now - lastFpsUpdateTime).count();
 
     if (elapsedMicroseconds >= 500000)
     {

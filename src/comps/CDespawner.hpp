@@ -13,8 +13,7 @@ public:
     void update(Context& ctx) override
     {
         auto transform = gameObject.getComponent<CTransform>();
-        if (!transform)
-            return;
+        if (!transform) return;
 
         sf::Vector2f position = transform->getLocalPosition();
         sf::View view = ctx.window.getView();
@@ -25,9 +24,6 @@ public:
         f32 maxDistance = std::max(view.getSize().x, view.getSize().y) * 0.6f;
 
         // Despawn if the entity is too far from the view center.
-        if (std::hypot(position.x - viewCenter.x, position.y - viewCenter.y) > maxDistance)
-        {
-            gameObject.destroy();
-        }
+        if (std::hypot(position.x - viewCenter.x, position.y - viewCenter.y) > maxDistance) { gameObject.destroy(); }
     }
 };

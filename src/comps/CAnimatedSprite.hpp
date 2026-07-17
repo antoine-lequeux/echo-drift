@@ -13,8 +13,7 @@ public:
 
     void update(Context& ctx) override
     {
-        if (!currentAnim)
-            return;
+        if (!currentAnim) return;
 
         if (playing)
         {

@@ -33,11 +33,10 @@ public:
 
 private:
 
-    std::unordered_map<Action, sf::Keyboard::Key> m_keyBindings = {
-        {Action::MoveUp, sf::Keyboard::Key::Up},     {Action::MoveDown, sf::Keyboard::Key::Down},
-        {Action::MoveLeft, sf::Keyboard::Key::Left}, {Action::MoveRight, sf::Keyboard::Key::Right},
-        {Action::Shoot, sf::Keyboard::Key::Space},   {Action::Pause, sf::Keyboard::Key::Escape},
-        {Action::Debug, sf::Keyboard::Key::D}};
+    std::unordered_map<Action, sf::Keyboard::Key> m_keyBindings = {{Action::MoveUp, sf::Keyboard::Key::Up},     {Action::MoveDown, sf::Keyboard::Key::Down},
+                                                                   {Action::MoveLeft, sf::Keyboard::Key::Left}, {Action::MoveRight, sf::Keyboard::Key::Right},
+                                                                   {Action::Shoot, sf::Keyboard::Key::Space},   {Action::Pause, sf::Keyboard::Key::Escape},
+                                                                   {Action::Debug, sf::Keyboard::Key::D}};
 
     std::unordered_map<Action, bool> m_actionTriggered;
     std::unordered_map<Action, bool> m_actionActive;

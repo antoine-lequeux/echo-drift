@@ -14,27 +14,20 @@ CSpaceShip::CSpaceShip(GameObject& gameObject) : Component(gameObject) {}
 void CSpaceShip::update(Context& ctx)
 {
     auto transform = gameObject.getComponent<CTransform>();
-    if (!transform)
-        return;
+    if (!transform) return;
 
     auto speedComp = gameObject.getComponent<CSpeed>();
-    if (!speedComp)
-        return;
+    if (!speedComp) return;
 
     auto spriteComp = gameObject.getComponent<CMultiSprite>();
-    if (!spriteComp)
-        return;
+    if (!spriteComp) return;
 
     sf::Vector2f direction{0.f, 0.f};
 
-    if (ctx.input.isActionActive(Action::MoveUp))
-        direction.y -= 1.f;
-    if (ctx.input.isActionActive(Action::MoveDown))
-        direction.y += 1.f;
-    if (ctx.input.isActionActive(Action::MoveLeft))
-        direction.x -= 1.f;
-    if (ctx.input.isActionActive(Action::MoveRight))
-        direction.x += 1.f;
+    if (ctx.input.isActionActive(Action::MoveUp)) direction.y -= 1.f;
+    if (ctx.input.isActionActive(Action::MoveDown)) direction.y += 1.f;
+    if (ctx.input.isActionActive(Action::MoveLeft)) direction.x -= 1.f;
+    if (ctx.input.isActionActive(Action::MoveRight)) direction.x += 1.f;
 
     if (direction.length() > 0)
     {
@@ -62,8 +55,7 @@ void CSpaceShip::update(Context& ctx)
     spriteComp->setInversionX(speedComp->getSpeed().x > 0.01f);
 
     timeSinceLastShot += ctx.dt;
-    if (ctx.input.isActionActive(Action::Shoot) && timeSinceLastShot >= shootCooldown)
-        shootProjectile(ctx);
+    if (ctx.input.isActionActive(Action::Shoot) && timeSinceLastShot >= shootCooldown) shootProjectile(ctx);
 
     // Smoothly interpolate the rotation towards the target angle.
     f32 currentAngle = transform->getLocalRotation();
@@ -92,16 +84,13 @@ void CSpaceShip::shootProjectile(Context& ctx)
     timeSinceLastShot = 0.f;
 
     auto shipTransform = gameObject.getComponent<CTransform>();
-    if (!shipTransform)
-        return;
+    if (!shipTransform) return;
 
     auto shipSprite = gameObject.getComponent<CSprite>();
-    if (!shipSprite)
-        return;
+    if (!shipSprite) return;
 
     auto shipSpeed = gameObject.getComponent<CSpeed>();
-    if (!shipSpeed)
-        return;
+    if (!shipSpeed) return;
 
     // Get the world position of the point located at the front of the ship.
     const sf::Vector2f shipFront = shipTransform->getGlobalPoint({0.f, -shipSprite->getSize().y / 2.f});
@@ -126,8 +115,7 @@ void CSpaceShip::shootProjectile(Context& ctx)
         transform.setPosition(shipFront + shipSpeed->getSpeed() * ctx.dt * 3.f);
         transform.setRotation(shipTransform->getLocalRotation() + angleOffset);
 
-        auto& sprite =
-            projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(ResourceID::Projectile), 6);
+        auto& sprite = projectile.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(ResourceID::Projectile), 6);
 
         projectile.addComponent<CSpeed>(rotatedDirection.normalized() * 800.f);
         projectile.addComponent<CDespawner>();

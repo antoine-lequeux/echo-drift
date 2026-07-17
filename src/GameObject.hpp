@@ -68,14 +68,20 @@ public:
 
         // If replacing an existing component, remove the old aliases first.
         auto concreteKey = std::type_index(typeid(T));
-        if (ownedComponents.contains(concreteKey))
-            removeAliasesFor(ownedComponents[concreteKey].get());
+        auto it = std::find_if(ownedComponents.begin(), ownedComponents.end(), [&](const auto& pair) { return pair.first == concreteKey; });
 
-        // Transfer ownership.
-        ownedComponents[concreteKey] = std::move(component);
+        if (it != ownedComponents.end())
+        {
+            removeAliasesFor(it->second.get());
+            it->second = std::move(component);
+        }
+        else
+        {
+            ownedComponents.emplace_back(concreteKey, std::move(component));
+        }
 
         // Register the concrete key.
-        aliasComponents[concreteKey] = &ref;
+        aliasComponents.emplace_back(concreteKey, &ref);
 
         // Register alias keys for every base class between T and Component.
         registerBaseAliases<T>(ref);
@@ -87,9 +93,9 @@ public:
     template <typename T>
     inline void removeComponent()
     {
-        auto it = ownedComponents.find(std::type_index(typeid(T)));
-        if (it == ownedComponents.end())
-            return;
+        auto key = std::type_index(typeid(T));
+        auto it = std::find_if(ownedComponents.begin(), ownedComponents.end(), [&](const auto& pair) { return pair.first == key; });
+        if (it == ownedComponents.end()) return;
         removeAliasesFor(it->second.get());
         ownedComponents.erase(it);
     }
@@ -106,16 +112,15 @@ public:
     inline T* getComponent()
     {
         auto key = std::type_index(typeid(T));
-        auto it = aliasComponents.find(key);
-        if (it != aliasComponents.end())
-            return static_cast<T*>(it->second);
+        auto it = std::find_if(aliasComponents.begin(), aliasComponents.end(), [&](const auto& pair) { return pair.first == key; });
+        if (it != aliasComponents.end()) return static_cast<T*>(it->second);
 
         // Fallback: scan ownedComponents with dynamic_cast and cache the hit.
         for (auto& [k, comp] : ownedComponents)
         {
             if (auto* c = dynamic_cast<T*>(comp.get()))
             {
-                aliasComponents[key] = c;
+                aliasComponents.emplace_back(key, c);
                 return c;
             }
         }
@@ -125,13 +130,12 @@ public:
     template <typename T>
     inline const T* getComponent() const
     {
-        auto it = aliasComponents.find(std::type_index(typeid(T)));
-        if (it != aliasComponents.end())
-            return static_cast<const T*>(it->second);
+        auto key = std::type_index(typeid(T));
+        auto it = std::find_if(aliasComponents.begin(), aliasComponents.end(), [&](const auto& pair) { return pair.first == key; });
+        if (it != aliasComponents.end()) return static_cast<const T*>(it->second);
 
         for (auto& [k, comp] : ownedComponents)
-            if (auto* c = dynamic_cast<const T*>(comp.get()))
-                return c;
+            if (auto* c = dynamic_cast<const T*>(comp.get())) return c;
         return nullptr;
     }
 
@@ -139,15 +143,13 @@ public:
     template <typename Fn>
     void eachComponent(Fn&& fn)
     {
-        for (auto& [key, comp] : ownedComponents)
-            fn(*comp);
+        for (auto& [key, comp] : ownedComponents) fn(*comp);
     }
 
     // Update all components of the gameObject.
     inline void update(Context& ctx)
     {
-        for (auto& [key, comp] : ownedComponents)
-            comp->update(ctx);
+        for (auto& [key, comp] : ownedComponents) comp->update(ctx);
     }
 
     void addChild(GameObject& gameObject);
@@ -183,8 +185,8 @@ public:
 
 private:
 
-    std::unordered_map<std::type_index, std::unique_ptr<Component>> ownedComponents;
-    std::unordered_map<std::type_index, Component*> aliasComponents;
+    std::vector<std::pair<std::type_index, std::unique_ptr<Component>>> ownedComponents;
+    std::vector<std::pair<std::type_index, Component*>> aliasComponents;
 
     // Remove all alias entries that point to the given raw pointer.
     inline void removeAliasesFor(Component* ptr)
@@ -205,7 +207,7 @@ private:
     inline void tryRegisterAlias(T& instance)
     {
         if constexpr (std::is_base_of_v<Base, T> && !std::is_same_v<Base, T>)
-            aliasComponents[std::type_index(typeid(Base))] = static_cast<Component*>(static_cast<Base*>(&instance));
+            aliasComponents.emplace_back(std::type_index(typeid(Base)), static_cast<Component*>(static_cast<Base*>(&instance)));
     }
 
     GameObject* parent = nullptr;
@@ -241,10 +243,8 @@ public:
     {
         for (auto& obj : gameObjects)
         {
-            if (obj->isMarkedForDeletion())
-                continue;
-            if (auto* comp = obj->getComponent<T>())
-                fn(*comp);
+            if (obj->isMarkedForDeletion()) continue;
+            if (auto* comp = obj->getComponent<T>()) fn(*comp);
         }
     }
 
@@ -254,14 +254,11 @@ public:
     {
         for (auto& obj : gameObjects)
         {
-            if (obj->isMarkedForDeletion())
-                continue;
+            if (obj->isMarkedForDeletion()) continue;
             auto* a = obj->getComponent<A>();
-            if (!a)
-                continue;
+            if (!a) continue;
             auto* b = obj->getComponent<B>();
-            if (!b)
-                continue;
+            if (!b) continue;
             fn(*a, *b);
         }
     }
@@ -271,8 +268,7 @@ public:
     GameObject* findFirst()
     {
         for (auto& obj : gameObjects)
-            if (!obj->isMarkedForDeletion() && obj->hasComponent<T>())
-                return obj.get();
+            if (!obj->isMarkedForDeletion() && obj->hasComponent<T>()) return obj.get();
         return nullptr;
     }
 
@@ -282,8 +278,7 @@ public:
     {
         usize n = 0;
         for (auto& obj : gameObjects)
-            if (!obj->isMarkedForDeletion() && obj->hasComponent<T>())
-                ++n;
+            if (!obj->isMarkedForDeletion() && obj->hasComponent<T>()) ++n;
         return n;
     }
 
@@ -292,8 +287,7 @@ public:
     {
         usize n = 0;
         for (auto& obj : gameObjects)
-            if (!obj->isMarkedForDeletion())
-                ++n;
+            if (!obj->isMarkedForDeletion()) ++n;
         return n;
     }
 

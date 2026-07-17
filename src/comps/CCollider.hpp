@@ -39,6 +39,7 @@ public:
 
     const Polygon& getPolygon() const { return cachedPolygon; }
     const Aabb& getBounds() const { return cachedBounds; }
+    const std::vector<sf::Vector2f>& getAxes() const { return cachedAxes; }
 
     // Draw the shape for debugging purposes.
     virtual void showBounds(sf::RenderWindow& window) const = 0;
@@ -51,6 +52,7 @@ protected:
     Layer layer;
     Polygon cachedPolygon;
     Aabb cachedBounds;
+    std::vector<sf::Vector2f> cachedAxes;
 };
 
 // Derived component providing an ellipsoidal collider.

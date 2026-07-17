@@ -39,8 +39,7 @@ sf::Vector2f CTransform::getLocalScale() const { return scale; }
 // Get parent transform if it exists.
 const CTransform* CTransform::getParentTransform() const
 {
-    if (gameObject.getParent())
-        return gameObject.getParent()->getComponent<CTransform>();
+    if (gameObject.getParent()) return gameObject.getParent()->getComponent<CTransform>();
     return nullptr;
 }
 
@@ -62,8 +61,7 @@ void CTransform::recomputeGlobal() const
 
         cachedGlobalPosition = t.transformPoint(position);
         cachedGlobalRotation = trueRotation + parentTransform->getGlobalRotation();
-        cachedGlobalScale =
-            sf::Vector2f(scale.x * parentTransform->getGlobalScale().x, scale.y * parentTransform->getGlobalScale().y);
+        cachedGlobalScale = sf::Vector2f(scale.x * parentTransform->getGlobalScale().x, scale.y * parentTransform->getGlobalScale().y);
     }
 
     cachedDisplayRotation = quantizeRotation(cachedGlobalRotation);
@@ -72,29 +70,25 @@ void CTransform::recomputeGlobal() const
 
 sf::Vector2f CTransform::getGlobalPosition() const
 {
-    if (transformDirty)
-        recomputeGlobal();
+    if (transformDirty) recomputeGlobal();
     return cachedGlobalPosition;
 }
 
 f32 CTransform::getGlobalRotation() const
 {
-    if (transformDirty)
-        recomputeGlobal();
+    if (transformDirty) recomputeGlobal();
     return cachedGlobalRotation;
 }
 
 f32 CTransform::getDisplayRotation() const
 {
-    if (transformDirty)
-        recomputeGlobal();
+    if (transformDirty) recomputeGlobal();
     return cachedDisplayRotation;
 }
 
 sf::Vector2f CTransform::getGlobalScale() const
 {
-    if (transformDirty)
-        recomputeGlobal();
+    if (transformDirty) recomputeGlobal();
     return cachedGlobalScale;
 }
 

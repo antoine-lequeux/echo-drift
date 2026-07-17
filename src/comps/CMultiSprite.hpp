@@ -9,17 +9,13 @@ class CMultiSprite : public CSprite
 {
 public:
 
-    CMultiSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, usize frameCount, i32 drawOrder = 0)
-        : CSprite(gameObject, tex, drawOrder)
+    CMultiSprite(GameObject& gameObject, std::shared_ptr<sf::Texture> tex, usize frameCount, i32 drawOrder = 0) : CSprite(gameObject, tex, drawOrder)
     {
         i32 frameWidth = tex->getSize().x / frameCount;
         i32 frameHeight = tex->getSize().y;
 
         // Fill the vector of rects automatically, using the frame count and the texture dimensions.
-        for (usize i = 0; i < frameCount; i++)
-        {
-            rects.push_back(sf::IntRect{{frameWidth * static_cast<i32>(i), 0}, {frameWidth, frameHeight}});
-        }
+        for (usize i = 0; i < frameCount; i++) { rects.push_back(sf::IntRect{{frameWidth * static_cast<i32>(i), 0}, {frameWidth, frameHeight}}); }
         setTextureRect(rects[0]);
     }
 

@@ -8,8 +8,7 @@ void Input::handleEvent(const sf::Event& event)
         {
             if (e->code == key)
             {
-                if (!m_actionActive[action])
-                    m_actionTriggered[action] = true;
+                if (!m_actionActive[action]) m_actionTriggered[action] = true;
                 m_actionActive[action] = true;
             }
         }

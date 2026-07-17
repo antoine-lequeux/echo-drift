@@ -31,10 +31,7 @@ void GameObjectManager::update(f32 dt, Input& input, sf::RenderWindow& window)
     sortGameObjectsBySpriteDrawOrder(gameObjects);
 
     // Update gameObjects.
-    for (auto& gameObject : gameObjects)
-    {
-        gameObject->update(ctx);
-    }
+    for (auto& gameObject : gameObjects) { gameObject->update(ctx); }
 
     processCollisions();
 
@@ -65,34 +62,30 @@ void GameObjectManager::update(f32 dt, Input& input, sf::RenderWindow& window)
 // Sort gameObjects by their CSprite draw order. Only runs when drawOrderDirty is true.
 void GameObjectManager::sortGameObjectsBySpriteDrawOrder(GameObjects& gameObjects)
 {
-    if (!drawOrderDirty)
-        return;
+    if (!drawOrderDirty) return;
     drawOrderDirty = false;
 
     std::stable_sort(gameObjects.begin(), gameObjects.end(),
-                     [](const std::unique_ptr<GameObject>& a, const std::unique_ptr<GameObject>& b)
-                     { return a->drawOrder < b->drawOrder; });
+                     [](const std::unique_ptr<GameObject>& a, const std::unique_ptr<GameObject>& b) { return a->drawOrder < b->drawOrder; });
 }
 
 void GameObjectManager::processCollisions()
 {
-    for (auto& cell : asteroidGrid)
-        cell.clear();
+    for (auto& cell : asteroidGrid) cell.clear();
 
     const f32 halfWorldWidth = (GridSizeX * CollisionGridCellSize) / 2.f;
     const f32 halfWorldHeight = (GridSizeY * CollisionGridCellSize) / 2.f;
 
     auto getCellCoords = [&](f32 x, f32 y, i32& cx, i32& cy)
     {
-        cx = static_cast<i32>(std::floor((x + halfWorldWidth) / CollisionGridCellSize));
-        cy = static_cast<i32>(std::floor((y + halfWorldHeight) / CollisionGridCellSize));
+        cx = static_cast<i32>((x + halfWorldWidth) / CollisionGridCellSize);
+        cy = static_cast<i32>((y + halfWorldHeight) / CollisionGridCellSize);
     };
 
     // Populate grid with Asteroids.
     for (CCollider* collider : asteroidColliders)
     {
-        if (collider->gameObject.isMarkedForDeletion() || collider->getPolygon().empty())
-            continue;
+        if (collider->gameObject.isMarkedForDeletion() || collider->getPolygon().empty()) continue;
 
         const auto& bounds = collider->getBounds();
 
@@ -107,10 +100,7 @@ void GameObjectManager::processCollisions()
 
         for (i32 y = minY; y <= maxY; ++y)
         {
-            for (i32 x = minX; x <= maxX; ++x)
-            {
-                asteroidGrid[y * GridSizeX + x].push_back(collider);
-            }
+            for (i32 x = minX; x <= maxX; ++x) { asteroidGrid[y * GridSizeX + x].push_back(collider); }
         }
     }
 
@@ -120,8 +110,7 @@ void GameObjectManager::processCollisions()
     // Check Players and Projectiles within the grid.
     for (CCollider* a : dynamicColliders)
     {
-        if (a->gameObject.isMarkedForDeletion() || a->getPolygon().empty())
-            continue;
+        if (a->gameObject.isMarkedForDeletion() || a->getPolygon().empty()) continue;
 
         const auto& bounds = a->getBounds();
 
@@ -130,8 +119,7 @@ void GameObjectManager::processCollisions()
         getCellCoords(bounds.maxX, bounds.maxY, maxX, maxY);
 
         // If completely outside the grid, no asteroid could possibly hit it.
-        if (maxX < 0 || minX >= GridSizeX || maxY < 0 || minY >= GridSizeY)
-            continue;
+        if (maxX < 0 || minX >= GridSizeX || maxY < 0 || minY >= GridSizeY) continue;
 
         minX = std::max(0, std::min(GridSizeX - 1, minX));
         maxX = std::max(0, std::min(GridSizeX - 1, maxX));
@@ -144,13 +132,9 @@ void GameObjectManager::processCollisions()
             {
                 for (CCollider* b : asteroidGrid[y * GridSizeX + x])
                 {
-                    if (b->gameObject.isMarkedForDeletion() || b->getPolygon().empty())
-                        continue;
+                    if (b->gameObject.isMarkedForDeletion() || b->getPolygon().empty()) continue;
 
-                    if (a->isTouching(*b))
-                    {
-                        collisionsToResolve.emplace_back(a, b);
-                    }
+                    if (a->isTouching(*b)) { collisionsToResolve.emplace_back(a, b); }
                 }
             }
         }

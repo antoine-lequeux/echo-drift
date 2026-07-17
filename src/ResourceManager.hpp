@@ -29,8 +29,7 @@ public:
     std::shared_ptr<T> get(ResourceID id)
     {
         auto& map = getMap<T>();
-        if (auto it = map.find(id); it != map.end())
-            return it->second;
+        if (auto it = map.find(id); it != map.end()) return it->second;
         throw std::runtime_error("Resource not found: id=" + std::to_string(static_cast<i32>(id)));
     }
 

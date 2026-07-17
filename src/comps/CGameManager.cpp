@@ -36,12 +36,10 @@ void CGameManager::update(Context& ctx)
         transform.setPosition(position);
         transform.setRotation(utils::getRandom(0.f, 360.f));
 
-        static constexpr std::array<ResourceID, 4> asteroidTypes = {ResourceID::Asteroid1, ResourceID::Asteroid2,
-                                                                    ResourceID::Asteroid3, ResourceID::Asteroid4};
+        static constexpr std::array<ResourceID, 4> asteroidTypes = {ResourceID::Asteroid1, ResourceID::Asteroid2, ResourceID::Asteroid3, ResourceID::Asteroid4};
 
         // Create a Sprite component with an asteroid texture chosen randomly among four.
-        auto& sprite = asteroid.addComponent<CSprite>(
-            ctx.manager.resources.get<sf::Texture>(asteroidTypes[utils::getRandom(0, 3)]), 5);
+        auto& sprite = asteroid.addComponent<CSprite>(ctx.manager.resources.get<sf::Texture>(asteroidTypes[utils::getRandom(0, 3)]), 5);
 
         auto& col = asteroid.addComponent<CEllipseCollider>(Layer::Asteroid);
         col.rx = sprite.getWorldSize().x / 2.f;

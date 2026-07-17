@@ -35,29 +35,15 @@ bool overlapOnAxis(const Polygon& a, const Polygon& b, const sf::Vector2f& axis)
     return !(maxA < minB || maxB < minA);
 }
 
-bool polygonsCollide(const Polygon& a, const Polygon& b)
+bool polygonsCollide(const CCollider& a, const CCollider& b)
 {
-    std::array<sf::Vector2f, 64> axes{};
-    usize axisCount = 0;
+    const auto& axesA = a.getAxes();
+    for (const auto& axis : axesA)
+        if (!overlapOnAxis(a.getPolygon(), b.getPolygon(), axis)) return false;
 
-    auto addAxes = [&axes, &axisCount](const Polygon& shape)
-    {
-        for (usize i = 0; i < shape.size(); ++i)
-        {
-            sf::Vector2f edge = shape[(i + 1) % shape.size()] - shape[i];
-            sf::Vector2f normal(-edge.y, edge.x);
-            const f32 length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
-            if (axisCount < axes.size())
-                axes[axisCount++] = normal / length;
-        }
-    };
-
-    addAxes(a);
-    addAxes(b);
-
-    for (usize i = 0; i < axisCount; ++i)
-        if (!overlapOnAxis(a, b, axes[i]))
-            return false;
+    const auto& axesB = b.getAxes();
+    for (const auto& axis : axesB)
+        if (!overlapOnAxis(a.getPolygon(), b.getPolygon(), axis)) return false;
 
     return true;
 }
@@ -66,8 +52,7 @@ sf::ConvexShape makeConvexShape(const Polygon& p)
 {
     sf::ConvexShape shape;
     shape.setPointCount(p.size());
-    for (usize i = 0; i < p.size(); ++i)
-        shape.setPoint(i, p[i]);
+    for (usize i = 0; i < p.size(); ++i) shape.setPoint(i, p[i]);
     shape.setFillColor(sf::Color::Transparent);
     shape.setOutlineColor(sf::Color::Green);
     shape.setOutlineThickness(1.f);
@@ -79,15 +64,31 @@ sf::ConvexShape makeConvexShape(const Polygon& p)
 void CCollider::update(Context& ctx)
 {
     rebuildPolygon();
-    if (ctx.manager.resources.get<GameSettings>(ResourceID::Settings)->showColliders)
-        showBounds(ctx.window);
+
+    if (!cachedPolygon.empty())
+    {
+        cachedAxes.clear();
+        for (usize i = 0; i < cachedPolygon.size(); ++i)
+        {
+            sf::Vector2f edge = cachedPolygon[(i + 1) % cachedPolygon.size()] - cachedPolygon[i];
+            sf::Vector2f normal(-edge.y, edge.x);
+            const f32 length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+            cachedAxes.push_back(normal / length);
+        }
+    }
+
+    if (ctx.manager.resources.get<GameSettings>(ResourceID::Settings)->showColliders) showBounds(ctx.window);
 }
 
 bool CCollider::isTouching(const CCollider& other) const
 {
-    if (cachedPolygon.empty() || other.cachedPolygon.empty())
+    if (cachedPolygon.empty() || other.cachedPolygon.empty()) return false;
+
+    if (cachedBounds.maxX < other.cachedBounds.minX || cachedBounds.minX > other.cachedBounds.maxX || cachedBounds.maxY < other.cachedBounds.minY ||
+        cachedBounds.minY > other.cachedBounds.maxY)
         return false;
-    return polygonsCollide(cachedPolygon, other.cachedPolygon);
+
+    return polygonsCollide(*this, other);
 }
 
 void CEllipseCollider::rebuildPolygon()
@@ -116,8 +117,7 @@ void CEllipseCollider::rebuildPolygon()
     }
 
     if (rot != 0.f)
-        for (auto& pt : cachedPolygon)
-            pt = rotatePoint(pt, {cx, cy}, rot);
+        for (auto& pt : cachedPolygon) pt = rotatePoint(pt, {cx, cy}, rot);
 
     cachedBounds = {cachedPolygon[0].x, cachedPolygon[0].x, cachedPolygon[0].y, cachedPolygon[0].y};
     for (const auto& point : cachedPolygon)
@@ -131,8 +131,7 @@ void CEllipseCollider::rebuildPolygon()
 
 void CEllipseCollider::showBounds(sf::RenderWindow& window) const
 {
-    if (!cachedPolygon.empty())
-        window.draw(makeConvexShape(cachedPolygon));
+    if (!cachedPolygon.empty()) window.draw(makeConvexShape(cachedPolygon));
 }
 
 void CRectangleCollider::rebuildPolygon()
@@ -159,8 +158,7 @@ void CRectangleCollider::rebuildPolygon()
     cachedPolygon[3] = {cx - hw, cy + hh};
 
     if (rot != 0.f)
-        for (auto& pt : cachedPolygon)
-            pt = rotatePoint(pt, {cx, cy}, rot);
+        for (auto& pt : cachedPolygon) pt = rotatePoint(pt, {cx, cy}, rot);
 
     cachedBounds = {cachedPolygon[0].x, cachedPolygon[0].x, cachedPolygon[0].y, cachedPolygon[0].y};
     for (const auto& point : cachedPolygon)
@@ -174,6 +172,5 @@ void CRectangleCollider::rebuildPolygon()
 
 void CRectangleCollider::showBounds(sf::RenderWindow& window) const
 {
-    if (!cachedPolygon.empty())
-        window.draw(makeConvexShape(cachedPolygon));
+    if (!cachedPolygon.empty()) window.draw(makeConvexShape(cachedPolygon));
 }

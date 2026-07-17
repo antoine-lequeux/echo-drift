@@ -13,8 +13,7 @@ public:
     void update(Context& ctx) override
     {
         auto transform = gameObject.getComponent<CTransform>();
-        if (!transform)
-            return;
+        if (!transform) return;
         transform->move(speed * ctx.dt);
     }
 
